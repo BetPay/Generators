@@ -59,11 +59,14 @@
 	
 	.button-container {
 		display: flex;
-		padding-top: 200px;
+		padding-top: 50px;
 		justify-content: center; /* Wyśrodkowanie przycisków w poziomie */
 		gap: 10px; /* Odstęp między przyciskami */
 		}
-	
+.dropzone {
+    text-align: center;
+    margin-top: 130px; /*
+	}
 
 </style>
 </head>
@@ -75,14 +78,11 @@
   
   <div class="dropzone">
     <h4>Please choose what do you want to do:</h4>
-	 <form id="imageForm">
-		<div id="result"></div>
 		<div class="button-container">
 			<button type="button" id="Button" onclick="window.location.href='ThumbnailGenerator.html'">Generate Thumbnail</button>
 			<button type="button" id="Button" onclick="window.location.href='CollageGenerator.html'">Generate Collage</button>
 
 		</div>
-	  </form>
   </div>
   
 
