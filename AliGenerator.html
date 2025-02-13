@@ -75,19 +75,20 @@
 
         .result-link {
             color: black;
-			font-size: 20px; 
+            font-size: 18px; 
             font-weight: bold; 
             text-decoration: none;
             display: block; 
-            margin-top: 20px; 
+            margin-top: 30px; 
         }
 
         .result-link:hover {
             color: #9b2226; 
+			transform: scale(1.05); 
         }
 
         .check-text {
-            margin-top: 60px; 
+            margin-top: 40px; 
             color: #333; 
             font-size: 15px; 
         }
@@ -96,16 +97,16 @@
 
 <body>
   <div class="header">
-    <h1><a href="main.html">Ali Link Generator</a></h1>
+    <h1><a href="main.html">Generators</a></h1>
   </div>
   
   <div class="dropzone">
     <h4>Please paste link to Aliexpress product:</h4>
     <div class="button-container">
-      <input type="text" id="userLink" placeholder="Paste here:" style="width: 30%;">
+      <input type="text" id="userLink" placeholder="https://www.aliexpress.com/..." style="width: 30%;">
       <button type="button" id="generateButton" onclick="generateLinks()">Generate Links</button>
     </div>
-    <div id="output" class="output"></div> <!-- miejsce na wygenerowane linki -->
+    <div id="output" class="output"></div> 
   </div>
 </body>
 
@@ -117,30 +118,46 @@
 
     function generateLinks() {
         const userLink = document.getElementById('userLink').value;
-        const cleanUserLink = cleanLink(userLink);
         const outputDiv = document.getElementById('output');
         outputDiv.innerHTML = '';
 
-        // Sprawdzenie, czy link jest od AliExpress
-        if (!cleanUserLink.includes('aliexpress.com')) {
-            outputDiv.innerHTML = 'Please paste AliExpress link.';
+        // Sprawdzenie, czy pole jest puste
+        if (userLink.trim() === '') {
+            outputDiv.innerHTML = 'Please paste Aliexpress link.';
             return;
         }
 
+        const cleanUserLink = cleanLink(userLink);
+
+        // Sprawdzenie, czy link jest od AliExpress
+        if (!cleanUserLink.includes('aliexpress.com')) {
+            outputDiv.innerHTML = 'Please paste Aliexpress link.';
+            return;
+        }
+
+        const cleanLinkElement = document.createElement('a');
+        cleanLinkElement.href = cleanUserLink;
+        cleanLinkElement.target = '_blank'; 
+        cleanLinkElement.textContent = "Clean link";
+        cleanLinkElement.className = 'result-link'; 
+        outputDiv.appendChild(cleanLinkElement);
+
+        
         const params = ['561', '562', '680', '620'];
         params.forEach((param, index) => {
             const newLink = `${cleanUserLink}?sourceType=${param}`;
             const linkElement = document.createElement('a');
             linkElement.href = newLink;
             linkElement.target = '_blank'; 
-            linkElement.textContent = `Link ${index + 1}`;
+            linkElement.textContent = `Option ${param}`;
             linkElement.className = 'result-link'; 
             outputDiv.appendChild(linkElement);
         });
 
+       
         const checkText = document.createElement('p');
         checkText.textContent = "Check the links to see if any lead to a lower price.";
-        checkText.className = 'check-text'; // Dodanie klasy dla stylu
+        checkText.className = 'check-text'; 
         outputDiv.appendChild(checkText);
     }
 </script>
