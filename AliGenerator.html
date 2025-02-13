@@ -127,6 +127,14 @@
             return;
         }
 
+        // Sprawdzenie, czy to jest prawidłowy link
+        try {
+            new URL(userLink);
+        } catch (e) {
+            outputDiv.innerHTML = 'Please paste Aliexpress link.';
+            return;
+        }
+
         const cleanUserLink = cleanLink(userLink);
 
         // Sprawdzenie, czy link jest od AliExpress
