@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generators</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: Verdana; 
+            background: #f8f8f8; 
+            color: #333; 
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            padding: 20px;  
+            background: #fff; 
+            text-align: left; 
+            box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.1); 
+        }
+
+        .header h1 {
+            font-size: 2em; 
+            color: #333; 
+        }
+
+        .header a {
+            text-decoration: none; 
+            color: inherit; 
+        }
+
+        .dropzone {
+            text-align: center;
+            margin-top: 130px;
+        }
+
+        .output {
+            padding: 20px;
+            margin-top: 30px; /* Dodanie marginesu górnego */
+        }
+
+        #generateButton {
+            display: block;
+            width: 200px;
+            height: 50px;
+            background-color: #a7c957; 
+            color: white; 
+            border: none; 
+            margin: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+            line-height: 50px;
+            transition: all 0.3s linear; 
+            cursor: pointer; 
+            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+        }
+
+        #generateButton:hover {
+            background-color: #6a994e; 
+            box-shadow: 0px 0px 15px 0px rgba(0,0,0,.2);
+            transform: scale(1.05); 
+        }
+
+        .button-container {
+            display: flex;
+            padding-top: 50px;
+            justify-content: center;
+            gap: 10px; 
+        }
+
+        .result-link {
+            color: black;
+			font-size: 20px; 
+            font-weight: bold; 
+            text-decoration: none;
+            display: block; 
+            margin-top: 20px; 
+        }
+
+        .result-link:hover {
+            color: #9b2226; 
+        }
+
+        .check-text {
+            margin-top: 60px; 
+            color: #333; 
+            font-size: 15px; 
+        }
+    </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1><a href="main.html">Generators</a></h1>
+  </div>
+  
+  <div class="dropzone">
+    <h4>Oease paste link to Aliexpress product:</h4>
+    <div class="button-container">
+      <input type="text" id="userLink" placeholder="Wklej link tutaj" style="width: 30%;">
+      <button type="button" id="generateButton" onclick="generateLinks()">Generate Links</button>
+    </div>
+    <div id="output" class="output"></div> <!-- miejsce na wygenerowane linki -->
+  </div>
+</body>
+
+<script>
+    function cleanLink(link) {
+        const url = new URL(link);
+        return url.origin + url.pathname;
+    }
+
+    function generateLinks() {
+        const userLink = document.getElementById('userLink').value;
+        const cleanUserLink = cleanLink(userLink);
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = '';
+
+        // Sprawdzenie, czy link jest od AliExpress
+        if (!cleanUserLink.includes('aliexpress.com')) {
+            outputDiv.innerHTML = 'Proszę wklej link do AliExpress.';
+            return;
+        }
+
+        const params = ['561', '562', '680', '620'];
+        params.forEach((param, index) => {
+            const newLink = `${cleanUserLink}?sourceType=${param}`;
+            const linkElement = document.createElement('a');
+            linkElement.href = newLink;
+            linkElement.target = '_blank'; 
+            linkElement.textContent = `Link ${index + 1}`;
+            linkElement.className = 'result-link'; 
+            outputDiv.appendChild(linkElement);
+        });
+
+        const checkText = document.createElement('p');
+        checkText.textContent = "Check the links to see if any lead to a lower price.";
+        checkText.className = 'check-text'; // Dodanie klasy dla stylu
+        outputDiv.appendChild(checkText);
+    }
+</script>
+</html>
