@@ -1,90 +1,247 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
-  <title>Collage Generator</title>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  
- <style>
-  
-	body {
-        font-family: Verdana; 
-        background: #f8f8f8; 
-        color: #333; 
-    }
-	
-	 .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-		height: 50px;
-        padding: 20px;  
-        background: #fff; 
-        text-align: left; 
-        box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.1); 
-	}
-	
-	.header h1 {
-        font-size: 2em; 
-        color: #333; 
-    }
-	
-	.header a {
-    text-decoration: none; 
-    color: inherit; 
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generators</title>
 
-/* PAGES BUTTON */
-	#Button {
-      display: block;
-      width: 400px;
-      height: 100px;
-      background-color: #a7c957; 
-      color: white; 
-      border: none; 
-	  margin:50px;
-      border-radius: 5px;
-      font-size: 18px;
-      line-height: 50px;
-      transition: all 0.3s linear; 
-      cursor: pointer; 
-      box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      min-height: 100vh;
+      padding-top: 80px;
     }
 
-    #Button:hover {
-      background-color: #6a994e; 
-      box-shadow: 0px 0px 15px 0px rgba(0,0,0,.2);
-      transform: scale(1.05); 
+    /* ── Header ── */
+    .header {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 70px;
+      padding: 15px 20px;
+      background: #fff;
+      box-shadow: 0 2px 15px rgba(0,0,0,.15);
+      z-index: 100;
+      display: flex;
+      align-items: center;
     }
-	
-	.button-container {
-		display: flex;
-		padding-top: 50px;
-		justify-content: center; /* Wyśrodkowanie przycisków w poziomie */
-		gap: 10px; /* Odstęp między przyciskami */
-		}
-.dropzone {
-    text-align: center;
-    margin-top: 130px; /*
-	}
+    .header h1 { font-size: 1.8em; color: #333; }
+    .header a   { text-decoration: none; color: inherit; transition: color .3s; }
+    .header a:hover { color: #667eea; }
 
-</style>
+    /* ── Page layout ── */
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    /* ── Hero / info card ── */
+    .hero {
+      background: #fff;
+      border-radius: 10px;
+      padding: 40px 30px;
+      margin-bottom: 35px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      text-align: center;
+    }
+    .hero h2 {
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 1.05em;
+      color: #666;
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Generator cards grid ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 25px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 35px 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform .25s, box-shadow .25s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 35px rgba(0,0,0,.18);
+    }
+
+    .card-icon {
+      font-size: 3.2em;
+      margin-bottom: 18px;
+      line-height: 1;
+    }
+
+    .card h3 {
+      font-size: 1.35em;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .card p {
+      font-size: 0.95em;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex-grow: 1;       /* pcha przycisk zawsze na dół */
+    }
+
+    /* ── Badge z parametrami ── */
+    .card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 25px;
+    }
+    .badge {
+      background: #f0f4ff;
+      color: #667eea;
+      font-size: 0.78em;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid #d0d8ff;
+    }
+
+    /* ── Przycisk wewnątrz karty ── */
+    .card-btn {
+      display: inline-block;
+      padding: 13px 36px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95em;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #fff;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 15px rgba(0,0,0,.2);
+      text-decoration: none;
+      width: 100%;
+    }
+
+    .card-btn-thumbnail {
+      background: linear-gradient(135deg, #a7c957 0%, #6a994e 100%);
+    }
+    .card-btn-thumbnail:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(106,153,78,.45);
+    }
+
+    .card-btn-collage {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .card-btn-collage:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102,126,234,.45);
+    }
+
+    /* ── Footer ── */
+    .page-footer {
+      text-align: center;
+      padding: 30px 20px;
+      font-size: 0.85em;
+      color: rgba(255,255,255,.65);
+    }
+
+    /* ── Responsywność ── */
+    @media (max-width: 680px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero h2  { font-size: 1.55em; }
+    }
+
+    @media (max-width: 400px) {
+      .card { padding: 25px 20px; }
+    }
+  </style>
 </head>
 
 <body>
-  <div class="header">
-    <h1><a href="main.html">Generators</a>
-  </div>
-  
-  <div class="dropzone">
-    <h4>Please choose what do you want to do:</h4>
-		<div class="button-container">
-			<button type="button" id="Button" onclick="window.location.href='ThumbnailGenerator.html'">Generate Thumbnail</button>
-			<button type="button" id="Button" onclick="window.location.href='CollageGenerator.html'">Generate Collage</button>
 
-		</div>
+  <div class="header">
+    <h1><a href="main.html">📸 Generators</a></h1>
   </div>
-  
+
+  <div class="container">
+
+    <!-- Hero -->
+    <div class="hero">
+      <h2>🛠️ Narzędzia graficzne</h2>
+      <p>
+        Szybko twórz gotowe materiały wizualne na Pepper.pl —
+        miniatury produktowe i poziome kolaże bezpośrednio w przeglądarce,
+        bez instalowania oprogramowania.
+      </p>
+    </div>
+
+    <!-- Karty generatorów -->
+    <div class="cards-grid">
+
+      <!-- Thumbnail -->
+      <a class="card" href="ThumbnailGenerator.html">
+        <div class="card-icon">🖼️</div>
+        <h3>Thumbnail Generator</h3>
+        <p>
+          Wygeneruj kwadratową miniaturę produktu z 1–4 zdjęć.
+          Aplikacja automatycznie dobiera optymalny układ kafelków
+          i eksportuje gotowy plik PNG.
+        </p>
+        <div class="card-badges">
+          <span class="badge">1000 × 1000 px</span>
+          <span class="badge">1–4 obrazki</span>
+          <span class="badge">Drag & Drop</span>
+          <span class="badge">Ctrl+V</span>
+        </div>
+        <span class="card-btn card-btn-thumbnail">Otwórz →</span>
+      </a>
+
+      <!-- Collage -->
+      <a class="card" href="CollageGenerator.html">
+        <div class="card-icon">🗂️</div>
+        <h3>Collage Generator</h3>
+        <p>
+          Stwórz poziomy baner ze zdjęć produktu — od 1 do 8 obrazków
+          ułożonych obok siebie. Idealny format do galerii na Pepper.pl.
+        </p>
+        <div class="card-badges">
+          <span class="badge">1000 × 500 px</span>
+          <span class="badge">1–8 obrazków</span>
+          <span class="badge">Drag & Drop</span>
+          <span class="badge">Ctrl+V</span>
+        </div>
+        <span class="card-btn card-btn-collage">Otwórz →</span>
+      </a>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Wszystkie operacje wykonywane są lokalnie w przeglądarce — żadne zdjęcia nie są wysyłane na serwer.
+  </div>
 
 </body>
 </html>
