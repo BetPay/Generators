@@ -446,7 +446,6 @@
           if (draggedIdx !== null && draggedIdx !== i) {
             [images[draggedIdx], images[i]] = [images[i], images[draggedIdx]];
             renderPreview();
-            showStatus('Order changed!', 'success');
           }
         });
 
