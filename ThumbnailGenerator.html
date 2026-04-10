@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +24,8 @@
       background: #fff;
       box-shadow: 0 2px 15px rgba(0,0,0,.15);
       z-index: 100;
+      display: flex;
+      align-items: center;
     }
     .header h1 { font-size: 1.8em; color: #333; }
     .header a   { text-decoration: none; color: inherit; transition: color .3s; }
@@ -57,16 +59,14 @@
       margin-bottom: 30px;
     }
 
-    /* ── Wrapper centers the drop area ── */
     .preview-wrapper { display: flex; justify-content: center; }
 
-    /* ── Drop area — rozmiar ustawiany przez JS (applyScale) ── */
     .drop-area {
       border: 3px dashed #667eea;
       border-radius: 10px;
       background: #fafafa;
       position: relative;
-      overflow: hidden;         /* przycina layout-container po skalowaniu */
+      overflow: hidden;
       cursor: pointer;
       transition: border-color .3s, box-shadow .3s;
       flex-shrink: 0;
@@ -78,7 +78,7 @@
       box-shadow: 0 0 20px rgba(102,126,234,.35);
     }
 
-    /* ── Placeholder — pozycjonowany względem .drop-area (nie layout-container) ── */
+    /* ── Placeholder ── */
     .drop-placeholder {
       position: absolute;
       top: 50%; left: 50%;
@@ -94,10 +94,9 @@
     .drop-placeholder .ph-sub  { font-size: 12px; }
 
     /*
-      layout-container:
-      - zawsze 1000×1000 px wewnętrznie
-      - skalowany przez CSS transform (transform-origin: top left)
-      - overflow: hidden na .drop-area przycina go do wizualnego rozmiaru
+      layout-container — always 1000×1000 px internally,
+      scaled via CSS transform (transform-origin: top left).
+      overflow: hidden on .drop-area clips it to visible size.
     */
     .layout-container {
       width: 1000px;
@@ -128,7 +127,7 @@
       box-shadow: inset 0 0 20px rgba(102,126,234,.25);
     }
 
-    /* WAŻNE: object-fit: cover — spójne z logiką canvasa */
+    /* object-fit: cover — matches canvas export behaviour */
     .image-slot img {
       width: 100%; height: 100%;
       object-fit: cover;
@@ -137,24 +136,36 @@
       -webkit-user-drag: none;
     }
 
-    /* ── Przycisk usuwania ── */
+    /* ── Remove button ─────────────────────────────────────────
+       FIX: padding: 0 prevents the generic "button { padding: 14px 38px }"
+       rule from turning the circle into an ellipse.
+       width + height are explicit so border-radius: 50% stays circular.
+    ─────────────────────────────────────────────────────────── */
     .remove-btn {
       position: absolute; top: 8px; right: 8px;
       width: 30px; height: 30px;
-      border-radius: 50%; border: none;
+      padding: 0;                          /* ← THE FIX */
+      border-radius: 50%;
+      border: none;
       background: rgba(220,50,50,.9);
-      color: #fff; font-size: 14px; font-weight: 700;
+      color: #fff;
+      font-size: 14px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;                      /* never squish */
       cursor: pointer;
       opacity: 0;
       transition: opacity .2s, transform .2s, background .2s;
       box-shadow: 0 2px 8px rgba(0,0,0,.3);
       z-index: 10;
+      line-height: 1;
     }
     .image-slot:hover .remove-btn { opacity: 1; }
-    .remove-btn:hover { transform: scale(1.15); background: #c00; }
+    .remove-btn:hover {
+      transform: scale(1.15);
+      background: #c00;
+    }
 
-    /* ── Podpowiedź drag ── */
+    /* ── Drag hint ── */
     .drag-hint {
       position: absolute; bottom: 8px; left: 8px;
       background: rgba(0,0,0,.45);
@@ -165,14 +176,13 @@
     }
     .image-slot:hover .drag-hint { opacity: 1; }
 
-    /* ── Stopka podglądu ── */
+    /* ── Preview footer ── */
     .preview-footer {
       text-align: center;
       margin-top: 12px;
     }
-    .count-label {
-      font-size: 13px; color: #777; margin-bottom: 8px;
-    }
+    .count-label { font-size: 13px; color: #777; margin-bottom: 8px; }
+
     .add-btn-label {
       display: inline-block;
       padding: 8px 22px;
@@ -182,18 +192,21 @@
       cursor: pointer;
       transition: transform .2s, box-shadow .2s;
       box-shadow: 0 2px 10px rgba(102,126,234,.35);
+      user-select: none;
     }
     .add-btn-label:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(102,126,234,.45);
     }
 
-    /* ── Przyciski akcji ── */
+    /* ── Action buttons ── */
     .button-container {
       display: flex; justify-content: center;
       gap: 20px; flex-wrap: wrap; margin-top: 20px;
     }
-    button {
+
+    /* Generic button base — only for .button-container buttons */
+    .button-container button {
       padding: 14px 38px; font-size: 15px;
       border: none; border-radius: 8px;
       cursor: pointer; font-weight: 600;
@@ -255,11 +268,11 @@
 
     <div class="info-section">
       <h2>🖼️ Thumbnail Generator</h2>
-      <p>Przeciągnij i upuść zdjęcia, wklej ze schowka (Ctrl+V) lub kliknij obszar, aby wybrać pliki.</p>
+      <p>Drag and drop images, paste from clipboard (Ctrl+V), or click the area to select files.</p>
       <p style="font-size:.9em;color:#999;margin-top:8px;">
-        ✋ Przeciągnij obrazki by zmienić kolejność &nbsp;•&nbsp;
-        Obsługuje 1–4 obrazki z automatycznym rozkładem &nbsp;•&nbsp;
-        Wynik: 1000 × 1000 px
+        ✋ Drag images to reorder &nbsp;•&nbsp;
+        Supports 1–4 images with automatic layout &nbsp;•&nbsp;
+        Output: 1000 × 1000 px
       </p>
     </div>
 
@@ -267,25 +280,20 @@
       <div class="preview-wrapper">
         <div>
 
-          <!-- Obszar upuszczania — rozmiar w px ustawiany przez applyScale() -->
           <div class="drop-area" id="dropArea">
-
-            <!-- Widoczny gdy brak zdjęć -->
             <div class="drop-placeholder" id="dropPlaceholder">
               <span class="ph-icon">🖼️</span>
-              <p class="ph-main">Upuść zdjęcia tutaj lub kliknij</p>
-              <p class="ph-sub">PNG, JPG, WEBP &nbsp;•&nbsp; maks. 4 obrazki</p>
+              <p class="ph-main">Drop images here or click</p>
+              <p class="ph-sub">PNG, JPG, WEBP &nbsp;•&nbsp; max. 4 images</p>
             </div>
-
-            <!-- Wewnętrzna przestrzeń 1000×1000 (skalowana CSS transform) -->
             <div class="layout-container" id="layoutContainer"></div>
           </div>
 
           <div class="preview-footer">
             <p class="count-label">
-              <span id="imageCount">0</span> / 4 obrazków
+              <span id="imageCount">0</span> / 4 images
             </p>
-            <label class="add-btn-label" for="fileInput">➕ Dodaj zdjęcia</label>
+            <label class="add-btn-label" for="fileInput">➕ Add images</label>
             <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
           </div>
 
@@ -295,21 +303,21 @@
     </div>
 
     <div class="button-container">
-      <button id="downloadButton" onclick="generateThumbnail()">📥 Generuj miniaturę</button>
-      <button id="clearButton"    onclick="clearAll()">🗑️ Wyczyść</button>
+      <button id="downloadButton" onclick="generateThumbnail()">📥 Generate Thumbnail</button>
+      <button id="clearButton"    onclick="clearAll()">🗑️ Clear All</button>
     </div>
 
-  </div><!-- /container -->
+  </div>
 
   <script>
     /* ============================================================
-       Stałe i stan
+       Constants & state
     ============================================================ */
     const MAX_IMAGES = 4;
-    const GAP = 4;          // odstęp między kafelkami w przestrzeni 1000 px
+    const GAP        = 4;   // gap between tiles in 1000 px space
 
-    let images     = [];    // [{ url: string, name: string }]
-    let draggedIdx = null;  // indeks przeciąganego slotu
+    let images     = [];
+    let draggedIdx = null;
 
     const dropArea        = document.getElementById('dropArea');
     const layoutContainer = document.getElementById('layoutContainer');
@@ -320,43 +328,41 @@
     const dlBtn           = document.getElementById('downloadButton');
 
     /* ============================================================
-       Obliczanie layoutu — JEDNA funkcja używana w podglądzie i eksporcie
-       Zwraca tablicę { x, y, w, h } w przestrzeni 1000×1000 px
+       Layout — single source of truth used by both preview & export
     ============================================================ */
     function getLayout(n) {
-      const half = (1000 - GAP) / 2; // = 498 px
+      const half = (1000 - GAP) / 2;
 
       switch (n) {
         case 1: return [
-          { x: 0,           y: 0,           w: 1000,            h: 1000           }
+          { x: 0,          y: 0,          w: 1000,           h: 1000          }
         ];
         case 2: return [
-          { x: 0,           y: 0,           w: half,            h: 1000           },
-          { x: half + GAP,  y: 0,           w: 1000-half-GAP,   h: 1000           }
+          { x: 0,          y: 0,          w: half,           h: 1000          },
+          { x: half + GAP, y: 0,          w: 1000-half-GAP,  h: 1000          }
         ];
         case 3: return [
-          { x: 0,           y: 0,           w: half,            h: half           },
-          { x: half + GAP,  y: 0,           w: 1000-half-GAP,   h: half           },
-          { x: 0,           y: half + GAP,  w: 1000,             h: 1000-half-GAP }
+          { x: 0,          y: 0,          w: half,           h: half          },
+          { x: half + GAP, y: 0,          w: 1000-half-GAP,  h: half          },
+          { x: 0,          y: half + GAP, w: 1000,           h: 1000-half-GAP }
         ];
         case 4: return [
-          { x: 0,           y: 0,           w: half,            h: half           },
-          { x: half + GAP,  y: 0,           w: 1000-half-GAP,   h: half           },
-          { x: 0,           y: half + GAP,  w: half,            h: 1000-half-GAP  },
-          { x: half + GAP,  y: half + GAP,  w: 1000-half-GAP,   h: 1000-half-GAP  }
+          { x: 0,          y: 0,          w: half,           h: half          },
+          { x: half + GAP, y: 0,          w: 1000-half-GAP,  h: half          },
+          { x: 0,          y: half + GAP, w: half,           h: 1000-half-GAP },
+          { x: half + GAP, y: half + GAP, w: 1000-half-GAP,  h: 1000-half-GAP }
         ];
         default: return [];
       }
     }
 
     /* ============================================================
-       Responsywne skalowanie podglądu
-       dropArea   → fizyczny rozmiar w px (ramka)
-       layoutContainer → wewnętrzna przestrzeń 1000×1000, skalowana transform
+       Responsive scaling — layout-container is always 1000×1000,
+       CSS transform scales it to fit available width
     ============================================================ */
     function applyScale() {
       const outer     = document.querySelector('.outer-container');
-      const outerPad  = 60; // 2 × 30 px padding
+      const outerPad  = 60;
       const available = Math.max(100, outer.clientWidth - outerPad);
       const scale     = Math.min(1, available / 1000);
       const size      = Math.round(1000 * scale);
@@ -369,7 +375,7 @@
     window.addEventListener('resize', applyScale);
 
     /* ============================================================
-       Renderowanie podglądu
+       Render preview
     ============================================================ */
     function renderPreview() {
       countEl.textContent           = images.length;
@@ -384,40 +390,37 @@
       images.forEach((imgData, i) => {
         const s    = layout[i];
         const slot = document.createElement('div');
-        slot.className    = 'image-slot';
-        slot.draggable    = true;
-        slot.dataset.idx  = i;
+        slot.className   = 'image-slot';
+        slot.draggable   = true;
+        slot.dataset.idx = i;
         slot.style.cssText =
           `left:${s.x}px; top:${s.y}px; width:${s.w}px; height:${s.h}px;`;
 
-        // Obrazek (object-fit: cover — identyczny efekt jak canvas)
-        const img   = document.createElement('img');
-        img.src      = imgData.url;
-        img.alt      = imgData.name;
+        const img    = document.createElement('img');
+        img.src       = imgData.url;
+        img.alt       = imgData.name;
         img.draggable = false;
 
-        // Przycisk usuwania
-        const rmBtn = document.createElement('button');
+        const rmBtn       = document.createElement('button');
         rmBtn.className   = 'remove-btn';
         rmBtn.type        = 'button';
-        rmBtn.title       = 'Usuń zdjęcie';
+        rmBtn.title       = 'Remove image';
         rmBtn.textContent = '✕';
         rmBtn.addEventListener('click', e => {
           e.stopPropagation();
           images.splice(i, 1);
           renderPreview();
-          showStatus('Zdjęcie usunięte.', 'success');
+          showStatus('Image removed.', 'success');
         });
 
-        // Podpowiedź drag
-        const hint = document.createElement('div');
+        const hint       = document.createElement('div');
         hint.className   = 'drag-hint';
-        hint.textContent = '↔ Przeciągnij by zmienić kolejność';
+        hint.textContent = '↔ Drag to reorder';
 
         slot.append(img, rmBtn, hint);
         layoutContainer.appendChild(slot);
 
-        /* -- Obsługa drag & drop (zmiana kolejności) -- */
+        /* Drag & drop — reordering */
         slot.addEventListener('dragstart', e => {
           draggedIdx = i;
           slot.classList.add('dragging');
@@ -426,7 +429,6 @@
         });
 
         slot.addEventListener('dragover', e => {
-          // Upuszczanie pliku z zewnątrz — przepuść do dropArea
           if (isFileDrag(e)) return;
           e.preventDefault();
           e.stopPropagation();
@@ -437,17 +439,14 @@
         slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
 
         slot.addEventListener('drop', e => {
-          // Upuszczanie pliku z zewnątrz — przepuść do dropArea
-          if (isFileDrag(e)) return;
+          if (isFileDrag(e)) { e.preventDefault(); return; }
           e.preventDefault();
           e.stopPropagation();
           slot.classList.remove('drag-over');
-
           if (draggedIdx !== null && draggedIdx !== i) {
-            // Zamiana miejscami
             [images[draggedIdx], images[i]] = [images[i], images[draggedIdx]];
             renderPreview();
-            showStatus('Kolejność zmieniona!', 'success');
+            showStatus('Order changed!', 'success');
           }
         });
 
@@ -460,7 +459,7 @@
     }
 
     /* ============================================================
-       Obsługa plików
+       File handling
     ============================================================ */
     function handleFiles(fileList) {
       const arr = Array.from(fileList).filter(f => f.type.startsWith('image/'));
@@ -469,11 +468,10 @@
       let queued = 0;
       for (const file of arr) {
         if (images.length + queued >= MAX_IMAGES) {
-          showStatus(`Maks. ${MAX_IMAGES} obrazki!`, 'warning');
+          showStatus(`Maximum ${MAX_IMAGES} images!`, 'warning');
           break;
         }
         queued++;
-
         const reader = new FileReader();
         reader.onload = ev => {
           if (images.length < MAX_IMAGES) {
@@ -481,13 +479,13 @@
             renderPreview();
           }
         };
-        reader.onerror = () => showStatus('Błąd wczytywania: ' + file.name, 'error');
+        reader.onerror = () => showStatus('Error reading file: ' + file.name, 'error');
         reader.readAsDataURL(file);
       }
     }
 
     /* ============================================================
-       Obsługa strefy upuszczania plików
+       Drop zone — file drag from outside
     ============================================================ */
     function isFileDrag(e) {
       return e.dataTransfer && e.dataTransfer.types &&
@@ -497,30 +495,21 @@
     dropArea.addEventListener('dragenter', e => {
       if (isFileDrag(e)) dropArea.classList.add('highlight');
     });
-
     dropArea.addEventListener('dragover', e => {
-      if (isFileDrag(e)) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-      }
+      if (isFileDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
     });
-
-    // POPRAWKA: używamy relatedTarget zamiast e.target === dropArea
     dropArea.addEventListener('dragleave', e => {
-      if (!dropArea.contains(e.relatedTarget)) {
-        dropArea.classList.remove('highlight');
-      }
+      if (!dropArea.contains(e.relatedTarget)) dropArea.classList.remove('highlight');
     });
-
     dropArea.addEventListener('drop', e => {
-      if (!isFileDrag(e)) return; // slot-reorder events już zatrzymane przez stopPropagation
+      if (!isFileDrag(e)) return;
       e.preventDefault();
       dropArea.classList.remove('highlight');
       handleFiles(e.dataTransfer.files);
     });
 
     /* ============================================================
-       Wklejanie ze schowka
+       Paste from clipboard
     ============================================================ */
     document.addEventListener('paste', e => {
       const files = Array.from(e.clipboardData.items)
@@ -530,37 +519,35 @@
     });
 
     /* ============================================================
-       Input plikowy + klik na obszar
+       File input + click on empty area
     ============================================================ */
     fileInput.addEventListener('change', e => {
       handleFiles(e.target.files);
-      e.target.value = ''; // reset — umożliwia ponowny wybór tego samego pliku
+      e.target.value = '';
     });
-
     dropArea.addEventListener('click', e => {
-      if (e.target.closest('.remove-btn'))  return; // nie otwieraj przy kliknięciu "usuń"
-      if (e.target.closest('.image-slot'))  return; // nie otwieraj przy kliknięciu na slot
+      if (e.target.closest('.remove-btn')) return;
+      if (e.target.closest('.image-slot')) return;
       fileInput.click();
     });
 
     /* ============================================================
-       Eksport Canvas (1000×1000 px)
+       Canvas export — 1000 × 1000 px
     ============================================================ */
     function generateThumbnail() {
       if (!images.length) {
-        showStatus('Dodaj co najmniej jedno zdjęcie!', 'error');
+        showStatus('Please add at least one image!', 'error');
         return;
       }
 
       dlBtn.disabled    = true;
-      dlBtn.textContent = '⏳ Generuję...';
+      dlBtn.textContent = '⏳ Generating...';
 
-      const canvas = document.createElement('canvas');
+      const canvas  = document.createElement('canvas');
       canvas.width  = 1000;
       canvas.height = 1000;
-      const ctx = canvas.getContext('2d');
+      const ctx     = canvas.getContext('2d');
 
-      // Białe tło (widoczne w GAP)
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, 1000, 1000);
 
@@ -578,23 +565,19 @@
         img.onload = () => {
           if (failed) return;
 
-          // POPRAWKA: przycinanie do slotu — bez tego obrazy wylewały się na sąsiednie
           ctx.save();
           ctx.beginPath();
           ctx.rect(s.x, s.y, s.w, s.h);
           ctx.clip();
 
-          // "Cover" — wypełnij slot zachowując proporcje (identycznie jak object-fit: cover)
           const ia = img.naturalWidth / img.naturalHeight;
           const sa = s.w / s.h;
           let dw, dh, dx, dy;
 
           if (ia > sa) {
-            // Szerszy niż slot — dopasuj po wysokości, przytnij boki
             dh = s.h;  dw = s.h * ia;
             dx = s.x + (s.w - dw) / 2;  dy = s.y;
           } else {
-            // Wyższy niż slot — dopasuj po szerokości, przytnij góra/dół
             dw = s.w;  dh = s.w / ia;
             dx = s.x;  dy = s.y + (s.h - dh) / 2;
           }
@@ -608,9 +591,9 @@
         img.onerror = () => {
           if (failed) return;
           failed = true;
-          showStatus(`Błąd ładowania: ${imgData.name}`, 'error');
+          showStatus(`Error loading: ${imgData.name}`, 'error');
           dlBtn.disabled    = false;
-          dlBtn.textContent = '📥 Generuj miniaturę';
+          dlBtn.textContent = '📥 Generate Thumbnail';
         };
 
         img.src = imgData.url;
@@ -625,23 +608,23 @@
       a.click();
 
       dlBtn.disabled    = false;
-      dlBtn.textContent = '📥 Generuj miniaturę';
-      showStatus('Miniatura wygenerowana! 🎉', 'success');
+      dlBtn.textContent = '📥 Generate Thumbnail';
+      showStatus('Thumbnail generated! 🎉', 'success');
     }
 
     /* ============================================================
-       Wyczyść
+       Clear all
     ============================================================ */
     function clearAll() {
-      if (!images.length) { showStatus('Brak zdjęć do usunięcia!', 'warning'); return; }
-      if (!confirm('Usunąć wszystkie zdjęcia?')) return;
+      if (!images.length) { showStatus('Nothing to clear!', 'warning'); return; }
+      if (!confirm('Remove all images?')) return;
       images = [];
       renderPreview();
-      showStatus('Wyczyszczono.', 'success');
+      showStatus('All cleared.', 'success');
     }
 
     /* ============================================================
-       Status helper — czyści poprzedni timer
+       Status helper
     ============================================================ */
     let statusTimer;
     function showStatus(msg, type) {
@@ -654,7 +637,7 @@
     }
 
     /* ============================================================
-       Inicjalizacja
+       Init
     ============================================================ */
     renderPreview();
     applyScale();
