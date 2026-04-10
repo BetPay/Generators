@@ -4,303 +4,504 @@
   <title>Thumbnail Generator</title>
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   
- <style>
-  
-	body {
-        font-family: Verdana; 
-        background: #f8f8f8; 
-        color: #333; 
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-	
-	 .header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-		height: 50px;
-        padding: 20px;  
-        background: #fff; 
-        text-align: left; 
-        box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.1); 
-	}
-	
-	.header h1 {
-        font-size: 2em; 
-        color: #333; 
+
+    body {
+      font-family: 'Segoe UI', Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      min-height: 100vh;
+      padding-top: 80px;
     }
-	
-	.header a {
-    text-decoration: none; 
-    color: inherit; 
-	}
 
-/* DROP AREA */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      padding: 15px 20px;
+      background: #fff;
+      text-align: left;
+      box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+    }
 
-	.dropzone {
-        text-align: center;
-        padding-top: 100px;
-	}
-	
-	 .outer-container {
-		width: 1000px;
-        margin: 20px auto;
-        padding: 20px;
-        background: #fff; 
-        border-radius: 5px; 
-        box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.1);
-	}
+    .header h1 {
+      font-size: 1.8em;
+      color: #333;
+    }
 
-	.drop-area {
-		width: 1000px; 
-		height: 1000px;
-		border: 2px dashed #ddd;
-		text-align: center;
-		cursor: pointer;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-start;
-		align-items: center;
-	}
+    .header a {
+      text-decoration: none;
+      color: inherit;
+      transition: color 0.3s ease;
+    }
+
+    .header a:hover {
+      color: #667eea;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .info-section {
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .info-section h2 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.5em;
+    }
+
+    .info-section p {
+      color: #666;
+      font-size: 1.05em;
+    }
+
+    .outer-container {
+      background: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .drop-area {
+      width: 1000px;
+      height: 1000px;
+      border: 3px dashed #667eea;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 15px;
+      background: #f9f9f9;
+      transition: all 0.3s ease;
+      padding: 20px;
+      align-content: start;
+      max-width: 100%;
+    }
+
+    .drop-area:hover {
+      background-color: #f0f4ff;
+      border-color: #764ba2;
+    }
 
     .drop-area.highlight {
-      background-color: #f0f8ff;
+      background-color: #e8f0fe;
+      border-color: #667eea;
+      box-shadow: 0px 0px 20px rgba(102, 126, 234, 0.3);
     }
-	
-	.drop-area img {
-	  max-width: 500px;
-	  max-height: 500px;
-	}
 
     .image-thumbnail {
-		flex: 1 0 auto;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		margin: 5px;
-		box-sizing: border-box;
-		width: calc(25% - 25px);
-		position: relative;
-		height: 400px;
-		width: 400px;
-		overflow: hidden;
-	}
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      height: 100%;
+    }
 
-	.image-thumbnail img {
-		max-height: 500px; 
-		max-width: 500px; 
-		object-fit: contain;
-		margin: auto; 
-	}
-	
-	.image-thumbnail:hover {
-		box-shadow: 5px 5px 15px 0px rgba(0,0,0,.2);
-		transform: scale(0.95);
-		transition: all 0.3s ease 0s;
-	}
-	
-	.image-thumbnail:hover .remove-button {
-		opacity: 1;
-	}
+    .image-thumbnail img {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+      padding: 10px;
+    }
 
-/* REMOVE BUTTON */
+    .image-thumbnail:hover {
+      box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .image-thumbnail:hover .remove-button {
+      opacity: 1;
+    }
 
     .remove-button {
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		background-color: rgba(0,0,0,0.6);
-		color: white;
-		border: none;
-		padding: 5px 8px;
-		font-size: 15px;
-		line-height: 20px;
-		height: 30px;
-		width: 30px;
-		text-align: center;
-		border-radius: 50%; 
-		cursor: pointer;
-		opacity: 0;
-		transition: all 0.3s ease;
-		box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.5);
-		text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
-	}
-
-/* CLEAN AND DOWNLOAD BUTTON */
-	#clearButton {
-		display: block;
-		width: 200px;
-		height: 50px;
-		color: white;
-		background-color: #ae2012;
-		border: none; 
-		border-radius: 5px;
-		font-size: 18px;
-		line-height: 50px;
-		transition: all 0.3s linear; 
-		cursor: pointer; 
-		box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-    }
-
-    #clearButton:hover {
-      background-color: #9b2226; 
-      box-shadow: 0px 0px 15px 0px rgba(0,0,0,.2);
-      transform: scale(1.05); 
-    }
-
-	
-	#downloadButton {
-      display: block;
-      width: 200px;
-      height: 50px;
-      background-color: #a7c957; 
-      color: white; 
-      border: none; 
-      border-radius: 5px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #ff4444;
+      color: white;
+      border: none;
+      padding: 0;
       font-size: 18px;
-      line-height: 50px;
-      transition: all 0.3s linear; 
-      cursor: pointer; 
-      box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+      height: 35px;
+      width: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.3s ease;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .remove-button:hover {
+      background-color: #cc0000;
+      transform: scale(1.1);
+    }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 15px 40px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    #downloadButton {
+      background: linear-gradient(135deg, #a7c957 0%, #6a994e 100%);
+      color: white;
     }
 
     #downloadButton:hover {
-      background-color: #6a994e; 
-      box-shadow: 0px 0px 15px 0px rgba(0,0,0,.2);
-      transform: scale(1.05); 
+      transform: translateY(-3px);
+      box-shadow: 0px 8px 25px rgba(106, 153, 78, 0.4);
     }
-	
-	.button-container {
-		display: flex;
-		justify-content: center; /* Wyśrodkowanie przycisków w poziomie */
-		gap: 10px; /* Odstęp między przyciskami */
-		}
-</style>
+
+    #downloadButton:active {
+      transform: translateY(-1px);
+    }
+
+    #downloadButton:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #clearButton {
+      background: linear-gradient(135deg, #ae2012 0%, #9b2226 100%);
+      color: white;
+    }
+
+    #clearButton:hover {
+      transform: translateY(-3px);
+      box-shadow: 0px 8px 25px rgba(174, 32, 18, 0.4);
+    }
+
+    #clearButton:active {
+      transform: translateY(-1px);
+    }
+
+    .status-message {
+      padding: 12px 20px;
+      margin-top: 15px;
+      border-radius: 5px;
+      font-weight: 500;
+      text-align: center;
+      display: none;
+    }
+
+    .status-message.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+
+    .status-message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+
+    .status-message.warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+      display: block;
+    }
+
+    .image-count-display {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    @media (max-width: 1100px) {
+      .drop-area {
+        width: 100%;
+        height: 600px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .drop-area {
+        height: 400px;
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
   <div class="header">
-    <h1><a href="main.html">Generators</a>
+    <h1><a href="main.html">📸 Generators</a></h1>
   </div>
-  
-  <div class="dropzone">
-    <h4>Drag images here or paste from the clipboard to create Thumbnail</h4>
-	 <form id="imageForm">
-		<div id="result"></div>
-		<div class="button-container">
-			<button type="button" id="downloadButton" onclick="generateImage()">Generate image</button>
-			<button type="button" id="clearButton" onclick="clearImages()">Clear</button>
-		</div>
-	  </form>
+
+  <div class="container">
+    <div class="info-section">
+      <h2>Thumbnail Generator</h2>
+      <p>Drag and drop images or paste from clipboard to create a 1000x1000px thumbnail. Maximum 4 images (2x2 grid).</p>
+    </div>
+
+    <div class="outer-container">
+      <div>
+        <div class="drop-area" id="imageInputs"></div>
+        <div class="image-count-display">
+          <span id="imageCount">0</span>/4 images
+        </div>
+        <div id="statusMessage" class="status-message"></div>
+      </div>
+    </div>
+
+    <div class="button-container">
+      <button type="button" id="downloadButton" onclick="generateImage()">📥 Generate Image</button>
+      <button type="button" id="clearButton" onclick="clearImages()">🗑️ Clear All</button>
+    </div>
   </div>
-  
- <div class="outer-container">
-	<div class="drop-area" id="imageInputs"></div>
-</div>
 
- <script>
-    var dropArea = document.getElementById('imageInputs');
+  <script>
+    const MAX_IMAGES = 4;
+    const dropArea = document.getElementById('imageInputs');
+    const statusMessage = document.getElementById('statusMessage');
 
-/* File dumping function */
-    dropArea.addEventListener('dragenter', function(event) {
-      event.preventDefault();
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, preventDefaults, false);
+      document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
       dropArea.classList.add('highlight');
-    });
+    }
 
-    dropArea.addEventListener('dragleave', function(event) {
-      event.preventDefault();
+    function unhighlight(e) {
       dropArea.classList.remove('highlight');
-    });
+    }
 
-    dropArea.addEventListener('dragover', function(event) {
-      event.preventDefault();
-    });
+    // Handle dropped files
+    dropArea.addEventListener('drop', handleDrop, false);
 
-    dropArea.addEventListener('drop', function(event) {
-      event.preventDefault();
-      dropArea.classList.remove('highlight');
-      handleDrop(event.dataTransfer.files);
-    });
+    // Handle pasted images
+    document.addEventListener('paste', handlePaste, false);
 
-    dropArea.addEventListener('paste', function(event) {
-      event.preventDefault();
-      var items = event.clipboardData.items;
-      var files = [];
-      for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        if (item.kind === 'file') {
-          files.push(item.getAsFile());
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      handleFiles(files);
+    }
+
+    function handlePaste(e) {
+      const items = e.clipboardData.items;
+      const files = [];
+      
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+          const file = items[i].getAsFile();
+          if (file.type.startsWith('image/')) {
+            files.push(file);
+          }
         }
       }
-      handleDrop(files);
-    });
+      
+      if (files.length > 0) {
+        handleFiles(files);
+      }
+    }
 
-/* File dumping function */
-    function handleDrop(files) {
-	  var imageCounter = document.getElementsByClassName('image-thumbnail').length;
-	  for (var i = 0; i < files.length; i++) {
-		if (imageCounter >= 4) {  // Zmień limit na 4
-		  alert("You can only upload up to 4 images.");  // Informacja dla użytkownika
-		  break;
-		}
-		var file = files[i];
-		if (file.type.startsWith('image/')) {
-		  var fileReader = new FileReader();
-		  fileReader.onload = (function(file) {
-			return function(event) {
-			  var imageURL = event.target.result;
-			  var imageElement = document.createElement('div');
-			  imageElement.className = "image-thumbnail";
-			  var img = document.createElement('img');
-			  img.src = imageURL;
-			  img.style.maxWidth = "100%";
-			  img.style.maxHeight = "100%";
-			  var removeButton = document.createElement('button');
-			  removeButton.className = "remove-button";
-			  removeButton.textContent = "X";
-			  removeButton.addEventListener('click', function() {
-				imageElement.remove();
-			  });
-			  imageElement.appendChild(img);
-			  imageElement.appendChild(removeButton);
-			  dropArea.appendChild(imageElement);
-			};
-		  })(file);
-		  fileReader.readAsDataURL(file);
+    function handleFiles(files) {
+      const currentCount = document.querySelectorAll('.image-thumbnail').length;
+      let validFiles = 0;
+      let rejectedFiles = 0;
 
-		  imageCounter++;
-		}
-	  }
-	}
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
 
-/* Clear Button */
-	function clearImages() {
-	  var container = document.getElementById('imageInputs');
-	  while (container.firstChild) {
-		container.removeChild(container.firstChild);
-	  }
-	}
+        if (!file.type.startsWith('image/')) {
+          rejectedFiles++;
+          continue;
+        }
 
-/* File generation */
-	function generateImage() {
-		var dropArea = document.getElementById('imageInputs');
-		  if (dropArea.children.length === 0) {
-			alert("Please add at least one image before generating the thumbnail.");
-			return; 
-		  }
+        if (currentCount + validFiles >= MAX_IMAGES) {
+          showStatus(`Maximum ${MAX_IMAGES} images reached!`, 'warning');
+          break;
+        }
 
-		  // Usunięcie obramowania przed generowaniem obrazka
-		  dropArea.style.border = 'none';
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          addImageToThumbnail(event.target.result, file.name);
+          updateImageCount();
+        };
 
-		  html2canvas(dropArea).then(function(canvas) {
-			var link = document.createElement('a');
-			link.download = 'thumbnail.png';
-			link.href = canvas.toDataURL();
-			link.click();
+        reader.onerror = () => {
+          showStatus('Error reading file: ' + file.name, 'error');
+        };
 
-			// Przywrócenie obramowania po wygenerowaniu obrazka
-			dropArea.style.border = '2px dashed #ddd';
-		  });
-  }
- </script>
+        reader.readAsDataURL(file);
+        validFiles++;
+      }
+
+      if (rejectedFiles > 0) {
+        showStatus(`${rejectedFiles} non-image file(s) were ignored.`, 'warning');
+      }
+    }
+
+    function addImageToThumbnail(imageURL, fileName) {
+      const imageElement = document.createElement('div');
+      imageElement.className = 'image-thumbnail';
+
+      const img = document.createElement('img');
+      img.src = imageURL;
+      img.alt = fileName || 'Image';
+
+      const removeButton = document.createElement('button');
+      removeButton.className = 'remove-button';
+      removeButton.textContent = '✕';
+      removeButton.type = 'button';
+      removeButton.title = 'Remove image';
+      removeButton.onclick = (e) => {
+        e.stopPropagation();
+        imageElement.remove();
+        updateImageCount();
+      };
+
+      imageElement.appendChild(img);
+      imageElement.appendChild(removeButton);
+      dropArea.appendChild(imageElement);
+    }
+
+    function updateImageCount() {
+      const count = document.querySelectorAll('.image-thumbnail').length;
+      document.getElementById('imageCount').textContent = count;
+      
+      // Enable/disable button based on image count
+      document.getElementById('downloadButton').disabled = count === 0;
+    }
+
+    function clearImages() {
+      if (dropArea.children.length === 0) {
+        showStatus('Nothing to clear!', 'warning');
+        return;
+      }
+
+      if (confirm('Are you sure you want to clear all images?')) {
+        dropArea.innerHTML = '';
+        updateImageCount();
+        showStatus('All images cleared.', 'success');
+      }
+    }
+
+    function generateImage() {
+      if (dropArea.children.length === 0) {
+        showStatus('Please add at least one image!', 'error');
+        return;
+      }
+
+      const downloadButton = document.getElementById('downloadButton');
+      downloadButton.disabled = true;
+      downloadButton.textContent = '⏳ Generating...';
+
+      // Remove border before generating
+      dropArea.style.border = 'none';
+      dropArea.style.background = '#fff';
+
+      html2canvas(dropArea, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        logging: false,
+        useCORS: true
+      }).then(function(canvas) {
+        const link = document.createElement('a');
+        link.download = `thumbnail_1000x1000_${new Date().toISOString().slice(0, 10)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // Restore border
+        dropArea.style.border = '3px dashed #667eea';
+        dropArea.style.background = '#f9f9f9';
+        
+        downloadButton.disabled = false;
+        downloadButton.textContent = '📥 Generate Image';
+        showStatus('Thumbnail generated successfully!', 'success');
+      }).catch(function(error) {
+        console.error('Error generating image:', error);
+        showStatus('Error generating image. Please try again.', 'error');
+        dropArea.style.border = '3px dashed #667eea';
+        dropArea.style.background = '#f9f9f9';
+        downloadButton.disabled = false;
+        downloadButton.textContent = '📥 Generate Image';
+      });
+    }
+
+    function showStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message ${type}`;
+      
+      if (type === 'success' || type === 'warning') {
+        setTimeout(() => {
+          statusMessage.className = 'status-message';
+        }, 4000);
+      }
+    }
+
+    // Initialize
+    updateImageCount();
+  </script>
 </body>
 </html>
