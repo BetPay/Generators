@@ -1,15 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thumbnail Generator</title>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', Verdana, sans-serif;
@@ -19,489 +16,648 @@
       padding-top: 80px;
     }
 
+    /* ── Header ── */
     .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 70px;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 70px;
       padding: 15px 20px;
       background: #fff;
-      text-align: left;
-      box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 15px rgba(0,0,0,.15);
       z-index: 100;
     }
+    .header h1 { font-size: 1.8em; color: #333; }
+    .header a   { text-decoration: none; color: inherit; transition: color .3s; }
+    .header a:hover { color: #667eea; }
 
-    .header h1 {
-      font-size: 1.8em;
-      color: #333;
-    }
-
-    .header a {
-      text-decoration: none;
-      color: inherit;
-      transition: color 0.3s ease;
-    }
-
-    .header a:hover {
-      color: #667eea;
-    }
-
+    /* ── Page layout ── */
     .container {
       max-width: 1100px;
       margin: 30px auto;
       padding: 0 20px;
     }
 
+    /* ── Info card ── */
     .info-section {
       background: #fff;
       padding: 25px;
       border-radius: 10px;
       margin-bottom: 30px;
-      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
       text-align: center;
     }
+    .info-section h2 { color: #333; margin-bottom: 10px; font-size: 1.5em; }
+    .info-section p  { color: #666; font-size: 1.05em; margin: 5px 0; }
 
-    .info-section h2 {
-      color: #333;
-      margin-bottom: 10px;
-      font-size: 1.5em;
-    }
-
-    .info-section p {
-      color: #666;
-      font-size: 1.05em;
-    }
-
+    /* ── Outer card ── */
     .outer-container {
       background: #fff;
       border-radius: 10px;
       padding: 30px;
-      box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
       margin-bottom: 30px;
-      display: flex;
-      justify-content: center;
     }
 
+    /* ── Wrapper centers the drop area ── */
+    .preview-wrapper { display: flex; justify-content: center; }
+
+    /* ── Drop area — rozmiar ustawiany przez JS (applyScale) ── */
     .drop-area {
-      width: 1000px;
-      height: 1000px;
       border: 3px dashed #667eea;
       border-radius: 10px;
-      text-align: center;
+      background: #fafafa;
+      position: relative;
+      overflow: hidden;         /* przycina layout-container po skalowaniu */
       cursor: pointer;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-gap: 15px;
-      background: #f9f9f9;
-      transition: all 0.3s ease;
-      padding: 20px;
-      align-content: start;
-      max-width: 100%;
+      transition: border-color .3s, box-shadow .3s;
+      flex-shrink: 0;
     }
-
-    .drop-area:hover {
-      background-color: #f0f4ff;
-      border-color: #764ba2;
-    }
-
+    .drop-area:hover   { border-color: #764ba2; }
     .drop-area.highlight {
-      background-color: #e8f0fe;
+      background: #f0f4ff;
       border-color: #667eea;
-      box-shadow: 0px 0px 20px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 0 20px rgba(102,126,234,.35);
     }
 
-    .image-thumbnail {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    /* ── Placeholder — pozycjonowany względem .drop-area (nie layout-container) ── */
+    .drop-placeholder {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #bbb;
+      pointer-events: none;
+      z-index: 5;
+      width: 90%;
+    }
+    .drop-placeholder .ph-icon { font-size: 52px; display: block; margin-bottom: 12px; }
+    .drop-placeholder .ph-main { font-size: 15px; font-weight: 600; color: #999; margin-bottom: 6px; }
+    .drop-placeholder .ph-sub  { font-size: 12px; }
+
+    /*
+      layout-container:
+      - zawsze 1000×1000 px wewnętrznie
+      - skalowany przez CSS transform (transform-origin: top left)
+      - overflow: hidden na .drop-area przycina go do wizualnego rozmiaru
+    */
+    .layout-container {
+      width: 1000px;
+      height: 1000px;
       position: relative;
       background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      height: 100%;
+      transform-origin: top left;
     }
 
-    .image-thumbnail img {
-      max-height: 100%;
-      max-width: 100%;
-      object-fit: contain;
-      padding: 10px;
-    }
-
-    .image-thumbnail:hover {
-      box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.2);
-      transform: translateY(-5px);
-    }
-
-    .image-thumbnail:hover .remove-button {
-      opacity: 1;
-    }
-
-    .remove-button {
+    /* ── Image slot ── */
+    .image-slot {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      background-color: #ff4444;
-      color: white;
-      border: none;
-      padding: 0;
-      font-size: 18px;
-      height: 35px;
-      width: 35px;
-      border-radius: 50%;
+      overflow: hidden;
+      background: #e8e8e8;
+      cursor: grab;
+      border: 2px solid transparent;
+      user-select: none;
+      transition: border-color .15s;
+    }
+    .image-slot:active { cursor: grabbing; }
+    .image-slot.dragging {
+      opacity: .55;
+      border-color: #667eea;
+      z-index: 999;
+    }
+    .image-slot.drag-over {
+      border: 3px solid #764ba2;
+      box-shadow: inset 0 0 20px rgba(102,126,234,.25);
+    }
+
+    /* WAŻNE: object-fit: cover — spójne z logiką canvasa */
+    .image-slot img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* ── Przycisk usuwania ── */
+    .remove-btn {
+      position: absolute; top: 8px; right: 8px;
+      width: 30px; height: 30px;
+      border-radius: 50%; border: none;
+      background: rgba(220,50,50,.9);
+      color: #fff; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       opacity: 0;
-      transition: all 0.3s ease;
-      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
+      transition: opacity .2s, transform .2s, background .2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      z-index: 10;
     }
+    .image-slot:hover .remove-btn { opacity: 1; }
+    .remove-btn:hover { transform: scale(1.15); background: #c00; }
 
-    .remove-button:hover {
-      background-color: #cc0000;
-      transform: scale(1.1);
+    /* ── Podpowiedź drag ── */
+    .drag-hint {
+      position: absolute; bottom: 8px; left: 8px;
+      background: rgba(0,0,0,.45);
+      color: #fff; font-size: 11px;
+      padding: 3px 8px; border-radius: 4px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s; z-index: 5;
     }
+    .image-slot:hover .drag-hint { opacity: 1; }
 
-    .button-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-top: 30px;
+    /* ── Stopka podglądu ── */
+    .preview-footer {
+      text-align: center;
+      margin-top: 12px;
     }
-
-    button {
-      padding: 15px 40px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
+    .count-label {
+      font-size: 13px; color: #777; margin-bottom: 8px;
+    }
+    .add-btn-label {
+      display: inline-block;
+      padding: 8px 22px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 2px 10px rgba(102,126,234,.35);
+    }
+    .add-btn-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102,126,234,.45);
+    }
+
+    /* ── Przyciski akcji ── */
+    .button-container {
+      display: flex; justify-content: center;
+      gap: 20px; flex-wrap: wrap; margin-top: 20px;
+    }
+    button {
+      padding: 14px 38px; font-size: 15px;
+      border: none; border-radius: 8px;
+      cursor: pointer; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .5px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.2);
+      transition: transform .25s, box-shadow .25s;
     }
 
     #downloadButton {
       background: linear-gradient(135deg, #a7c957 0%, #6a994e 100%);
-      color: white;
+      color: #fff;
     }
-
-    #downloadButton:hover {
+    #downloadButton:hover:not(:disabled) {
       transform: translateY(-3px);
-      box-shadow: 0px 8px 25px rgba(106, 153, 78, 0.4);
+      box-shadow: 0 8px 25px rgba(106,153,78,.4);
     }
-
-    #downloadButton:active {
-      transform: translateY(-1px);
-    }
-
     #downloadButton:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      opacity: 0.6;
+      background: #ccc; cursor: not-allowed;
+      opacity: .6; transform: none;
     }
 
     #clearButton {
       background: linear-gradient(135deg, #ae2012 0%, #9b2226 100%);
-      color: white;
+      color: #fff;
     }
-
     #clearButton:hover {
       transform: translateY(-3px);
-      box-shadow: 0px 8px 25px rgba(174, 32, 18, 0.4);
+      box-shadow: 0 8px 25px rgba(174,32,18,.4);
     }
 
-    #clearButton:active {
-      transform: translateY(-1px);
-    }
-
+    /* ── Status ── */
     .status-message {
-      padding: 12px 20px;
-      margin-top: 15px;
-      border-radius: 5px;
-      font-weight: 500;
-      text-align: center;
-      display: none;
+      padding: 11px 18px; margin-top: 14px;
+      border-radius: 6px; font-weight: 500;
+      text-align: center; display: none;
     }
-
     .status-message.success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-      display: block;
+      background: #d4edda; color: #155724;
+      border: 1px solid #c3e6cb; display: block;
     }
-
     .status-message.error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-      display: block;
+      background: #f8d7da; color: #721c24;
+      border: 1px solid #f5c6cb; display: block;
     }
-
     .status-message.warning {
-      background-color: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
-      display: block;
-    }
-
-    .image-count-display {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 14px;
-      color: #666;
-    }
-
-    @media (max-width: 1100px) {
-      .drop-area {
-        width: 100%;
-        height: 600px;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .drop-area {
-        height: 400px;
-        grid-template-columns: 1fr;
-      }
+      background: #fff3cd; color: #856404;
+      border: 1px solid #ffeaa7; display: block;
     }
   </style>
 </head>
 
 <body>
+
   <div class="header">
     <h1><a href="main.html">📸 Generators</a></h1>
   </div>
 
   <div class="container">
+
     <div class="info-section">
-      <h2>Thumbnail Generator</h2>
-      <p>Drag and drop images or paste from clipboard to create a 1000x1000px thumbnail. Maximum 4 images (2x2 grid).</p>
+      <h2>🖼️ Thumbnail Generator</h2>
+      <p>Przeciągnij i upuść zdjęcia, wklej ze schowka (Ctrl+V) lub kliknij obszar, aby wybrać pliki.</p>
+      <p style="font-size:.9em;color:#999;margin-top:8px;">
+        ✋ Przeciągnij obrazki by zmienić kolejność &nbsp;•&nbsp;
+        Obsługuje 1–4 obrazki z automatycznym rozkładem &nbsp;•&nbsp;
+        Wynik: 1000 × 1000 px
+      </p>
     </div>
 
     <div class="outer-container">
-      <div>
-        <div class="drop-area" id="imageInputs"></div>
-        <div class="image-count-display">
-          <span id="imageCount">0</span>/4 images
+      <div class="preview-wrapper">
+        <div>
+
+          <!-- Obszar upuszczania — rozmiar w px ustawiany przez applyScale() -->
+          <div class="drop-area" id="dropArea">
+
+            <!-- Widoczny gdy brak zdjęć -->
+            <div class="drop-placeholder" id="dropPlaceholder">
+              <span class="ph-icon">🖼️</span>
+              <p class="ph-main">Upuść zdjęcia tutaj lub kliknij</p>
+              <p class="ph-sub">PNG, JPG, WEBP &nbsp;•&nbsp; maks. 4 obrazki</p>
+            </div>
+
+            <!-- Wewnętrzna przestrzeń 1000×1000 (skalowana CSS transform) -->
+            <div class="layout-container" id="layoutContainer"></div>
+          </div>
+
+          <div class="preview-footer">
+            <p class="count-label">
+              <span id="imageCount">0</span> / 4 obrazków
+            </p>
+            <label class="add-btn-label" for="fileInput">➕ Dodaj zdjęcia</label>
+            <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+          </div>
+
+          <div id="statusMessage" class="status-message"></div>
         </div>
-        <div id="statusMessage" class="status-message"></div>
       </div>
     </div>
 
     <div class="button-container">
-      <button type="button" id="downloadButton" onclick="generateImage()">📥 Generate Image</button>
-      <button type="button" id="clearButton" onclick="clearImages()">🗑️ Clear All</button>
+      <button id="downloadButton" onclick="generateThumbnail()">📥 Generuj miniaturę</button>
+      <button id="clearButton"    onclick="clearAll()">🗑️ Wyczyść</button>
     </div>
-  </div>
+
+  </div><!-- /container -->
 
   <script>
+    /* ============================================================
+       Stałe i stan
+    ============================================================ */
     const MAX_IMAGES = 4;
-    const dropArea = document.getElementById('imageInputs');
-    const statusMessage = document.getElementById('statusMessage');
+    const GAP = 4;          // odstęp między kafelkami w przestrzeni 1000 px
 
-    // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      dropArea.addEventListener(eventName, preventDefaults, false);
-      document.body.addEventListener(eventName, preventDefaults, false);
-    });
+    let images     = [];    // [{ url: string, name: string }]
+    let draggedIdx = null;  // indeks przeciąganego slotu
 
-    function preventDefaults(e) {
-      e.preventDefault();
-      e.stopPropagation();
+    const dropArea        = document.getElementById('dropArea');
+    const layoutContainer = document.getElementById('layoutContainer');
+    const dropPlaceholder = document.getElementById('dropPlaceholder');
+    const statusEl        = document.getElementById('statusMessage');
+    const fileInput       = document.getElementById('fileInput');
+    const countEl         = document.getElementById('imageCount');
+    const dlBtn           = document.getElementById('downloadButton');
+
+    /* ============================================================
+       Obliczanie layoutu — JEDNA funkcja używana w podglądzie i eksporcie
+       Zwraca tablicę { x, y, w, h } w przestrzeni 1000×1000 px
+    ============================================================ */
+    function getLayout(n) {
+      const half = (1000 - GAP) / 2; // = 498 px
+
+      switch (n) {
+        case 1: return [
+          { x: 0,           y: 0,           w: 1000,            h: 1000           }
+        ];
+        case 2: return [
+          { x: 0,           y: 0,           w: half,            h: 1000           },
+          { x: half + GAP,  y: 0,           w: 1000-half-GAP,   h: 1000           }
+        ];
+        case 3: return [
+          { x: 0,           y: 0,           w: half,            h: half           },
+          { x: half + GAP,  y: 0,           w: 1000-half-GAP,   h: half           },
+          { x: 0,           y: half + GAP,  w: 1000,             h: 1000-half-GAP }
+        ];
+        case 4: return [
+          { x: 0,           y: 0,           w: half,            h: half           },
+          { x: half + GAP,  y: 0,           w: 1000-half-GAP,   h: half           },
+          { x: 0,           y: half + GAP,  w: half,            h: 1000-half-GAP  },
+          { x: half + GAP,  y: half + GAP,  w: 1000-half-GAP,   h: 1000-half-GAP  }
+        ];
+        default: return [];
+      }
     }
 
-    // Highlight drop area when item is dragged over it
-    ['dragenter', 'dragover'].forEach(eventName => {
-      dropArea.addEventListener(eventName, highlight, false);
-    });
+    /* ============================================================
+       Responsywne skalowanie podglądu
+       dropArea   → fizyczny rozmiar w px (ramka)
+       layoutContainer → wewnętrzna przestrzeń 1000×1000, skalowana transform
+    ============================================================ */
+    function applyScale() {
+      const outer     = document.querySelector('.outer-container');
+      const outerPad  = 60; // 2 × 30 px padding
+      const available = Math.max(100, outer.clientWidth - outerPad);
+      const scale     = Math.min(1, available / 1000);
+      const size      = Math.round(1000 * scale);
 
-    ['dragleave', 'drop'].forEach(eventName => {
-      dropArea.addEventListener(eventName, unhighlight, false);
-    });
-
-    function highlight(e) {
-      dropArea.classList.add('highlight');
+      dropArea.style.width  = size + 'px';
+      dropArea.style.height = size + 'px';
+      layoutContainer.style.transform = `scale(${scale})`;
     }
 
-    function unhighlight(e) {
-      dropArea.classList.remove('highlight');
-    }
+    window.addEventListener('resize', applyScale);
 
-    // Handle dropped files
-    dropArea.addEventListener('drop', handleDrop, false);
+    /* ============================================================
+       Renderowanie podglądu
+    ============================================================ */
+    function renderPreview() {
+      countEl.textContent           = images.length;
+      dlBtn.disabled                = images.length === 0;
+      dropPlaceholder.style.display = images.length ? 'none' : 'block';
 
-    // Handle pasted images
-    document.addEventListener('paste', handlePaste, false);
+      layoutContainer.innerHTML = '';
+      if (!images.length) return;
 
-    function handleDrop(e) {
-      const dt = e.dataTransfer;
-      const files = dt.files;
-      handleFiles(files);
-    }
+      const layout = getLayout(images.length);
 
-    function handlePaste(e) {
-      const items = e.clipboardData.items;
-      const files = [];
-      
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].kind === 'file') {
-          const file = items[i].getAsFile();
-          if (file.type.startsWith('image/')) {
-            files.push(file);
+      images.forEach((imgData, i) => {
+        const s    = layout[i];
+        const slot = document.createElement('div');
+        slot.className    = 'image-slot';
+        slot.draggable    = true;
+        slot.dataset.idx  = i;
+        slot.style.cssText =
+          `left:${s.x}px; top:${s.y}px; width:${s.w}px; height:${s.h}px;`;
+
+        // Obrazek (object-fit: cover — identyczny efekt jak canvas)
+        const img   = document.createElement('img');
+        img.src      = imgData.url;
+        img.alt      = imgData.name;
+        img.draggable = false;
+
+        // Przycisk usuwania
+        const rmBtn = document.createElement('button');
+        rmBtn.className   = 'remove-btn';
+        rmBtn.type        = 'button';
+        rmBtn.title       = 'Usuń zdjęcie';
+        rmBtn.textContent = '✕';
+        rmBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          images.splice(i, 1);
+          renderPreview();
+          showStatus('Zdjęcie usunięte.', 'success');
+        });
+
+        // Podpowiedź drag
+        const hint = document.createElement('div');
+        hint.className   = 'drag-hint';
+        hint.textContent = '↔ Przeciągnij by zmienić kolejność';
+
+        slot.append(img, rmBtn, hint);
+        layoutContainer.appendChild(slot);
+
+        /* -- Obsługa drag & drop (zmiana kolejności) -- */
+        slot.addEventListener('dragstart', e => {
+          draggedIdx = i;
+          slot.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', String(i));
+        });
+
+        slot.addEventListener('dragover', e => {
+          // Upuszczanie pliku z zewnątrz — przepuść do dropArea
+          if (isFileDrag(e)) return;
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = 'move';
+          if (!slot.classList.contains('dragging')) slot.classList.add('drag-over');
+        });
+
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+
+        slot.addEventListener('drop', e => {
+          // Upuszczanie pliku z zewnątrz — przepuść do dropArea
+          if (isFileDrag(e)) return;
+          e.preventDefault();
+          e.stopPropagation();
+          slot.classList.remove('drag-over');
+
+          if (draggedIdx !== null && draggedIdx !== i) {
+            // Zamiana miejscami
+            [images[draggedIdx], images[i]] = [images[i], images[draggedIdx]];
+            renderPreview();
+            showStatus('Kolejność zmieniona!', 'success');
           }
-        }
-      }
-      
-      if (files.length > 0) {
-        handleFiles(files);
-      }
-    }
+        });
 
-    function handleFiles(files) {
-      const currentCount = document.querySelectorAll('.image-thumbnail').length;
-      let validFiles = 0;
-      let rejectedFiles = 0;
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-
-        if (!file.type.startsWith('image/')) {
-          rejectedFiles++;
-          continue;
-        }
-
-        if (currentCount + validFiles >= MAX_IMAGES) {
-          showStatus(`Maximum ${MAX_IMAGES} images reached!`, 'warning');
-          break;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          addImageToThumbnail(event.target.result, file.name);
-          updateImageCount();
-        };
-
-        reader.onerror = () => {
-          showStatus('Error reading file: ' + file.name, 'error');
-        };
-
-        reader.readAsDataURL(file);
-        validFiles++;
-      }
-
-      if (rejectedFiles > 0) {
-        showStatus(`${rejectedFiles} non-image file(s) were ignored.`, 'warning');
-      }
-    }
-
-    function addImageToThumbnail(imageURL, fileName) {
-      const imageElement = document.createElement('div');
-      imageElement.className = 'image-thumbnail';
-
-      const img = document.createElement('img');
-      img.src = imageURL;
-      img.alt = fileName || 'Image';
-
-      const removeButton = document.createElement('button');
-      removeButton.className = 'remove-button';
-      removeButton.textContent = '✕';
-      removeButton.type = 'button';
-      removeButton.title = 'Remove image';
-      removeButton.onclick = (e) => {
-        e.stopPropagation();
-        imageElement.remove();
-        updateImageCount();
-      };
-
-      imageElement.appendChild(img);
-      imageElement.appendChild(removeButton);
-      dropArea.appendChild(imageElement);
-    }
-
-    function updateImageCount() {
-      const count = document.querySelectorAll('.image-thumbnail').length;
-      document.getElementById('imageCount').textContent = count;
-      
-      // Enable/disable button based on image count
-      document.getElementById('downloadButton').disabled = count === 0;
-    }
-
-    function clearImages() {
-      if (dropArea.children.length === 0) {
-        showStatus('Nothing to clear!', 'warning');
-        return;
-      }
-
-      if (confirm('Are you sure you want to clear all images?')) {
-        dropArea.innerHTML = '';
-        updateImageCount();
-        showStatus('All images cleared.', 'success');
-      }
-    }
-
-    function generateImage() {
-      if (dropArea.children.length === 0) {
-        showStatus('Please add at least one image!', 'error');
-        return;
-      }
-
-      const downloadButton = document.getElementById('downloadButton');
-      downloadButton.disabled = true;
-      downloadButton.textContent = '⏳ Generating...';
-
-      // Remove border before generating
-      dropArea.style.border = 'none';
-      dropArea.style.background = '#fff';
-
-      html2canvas(dropArea, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        useCORS: true
-      }).then(function(canvas) {
-        const link = document.createElement('a');
-        link.download = `thumbnail_1000x1000_${new Date().toISOString().slice(0, 10)}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-
-        // Restore border
-        dropArea.style.border = '3px dashed #667eea';
-        dropArea.style.background = '#f9f9f9';
-        
-        downloadButton.disabled = false;
-        downloadButton.textContent = '📥 Generate Image';
-        showStatus('Thumbnail generated successfully!', 'success');
-      }).catch(function(error) {
-        console.error('Error generating image:', error);
-        showStatus('Error generating image. Please try again.', 'error');
-        dropArea.style.border = '3px dashed #667eea';
-        dropArea.style.background = '#f9f9f9';
-        downloadButton.disabled = false;
-        downloadButton.textContent = '📥 Generate Image';
+        slot.addEventListener('dragend', () => {
+          document.querySelectorAll('.image-slot')
+            .forEach(s => s.classList.remove('dragging', 'drag-over'));
+          draggedIdx = null;
+        });
       });
     }
 
-    function showStatus(message, type) {
-      statusMessage.textContent = message;
-      statusMessage.className = `status-message ${type}`;
-      
-      if (type === 'success' || type === 'warning') {
-        setTimeout(() => {
-          statusMessage.className = 'status-message';
-        }, 4000);
+    /* ============================================================
+       Obsługa plików
+    ============================================================ */
+    function handleFiles(fileList) {
+      const arr = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+      if (!arr.length) return;
+
+      let queued = 0;
+      for (const file of arr) {
+        if (images.length + queued >= MAX_IMAGES) {
+          showStatus(`Maks. ${MAX_IMAGES} obrazki!`, 'warning');
+          break;
+        }
+        queued++;
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+          if (images.length < MAX_IMAGES) {
+            images.push({ url: ev.target.result, name: file.name });
+            renderPreview();
+          }
+        };
+        reader.onerror = () => showStatus('Błąd wczytywania: ' + file.name, 'error');
+        reader.readAsDataURL(file);
       }
     }
 
-    // Initialize
-    updateImageCount();
+    /* ============================================================
+       Obsługa strefy upuszczania plików
+    ============================================================ */
+    function isFileDrag(e) {
+      return e.dataTransfer && e.dataTransfer.types &&
+             Array.from(e.dataTransfer.types).includes('Files');
+    }
+
+    dropArea.addEventListener('dragenter', e => {
+      if (isFileDrag(e)) dropArea.classList.add('highlight');
+    });
+
+    dropArea.addEventListener('dragover', e => {
+      if (isFileDrag(e)) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      }
+    });
+
+    // POPRAWKA: używamy relatedTarget zamiast e.target === dropArea
+    dropArea.addEventListener('dragleave', e => {
+      if (!dropArea.contains(e.relatedTarget)) {
+        dropArea.classList.remove('highlight');
+      }
+    });
+
+    dropArea.addEventListener('drop', e => {
+      if (!isFileDrag(e)) return; // slot-reorder events już zatrzymane przez stopPropagation
+      e.preventDefault();
+      dropArea.classList.remove('highlight');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    /* ============================================================
+       Wklejanie ze schowka
+    ============================================================ */
+    document.addEventListener('paste', e => {
+      const files = Array.from(e.clipboardData.items)
+        .filter(it => it.kind === 'file' && it.type.startsWith('image/'))
+        .map(it => it.getAsFile());
+      if (files.length) handleFiles(files);
+    });
+
+    /* ============================================================
+       Input plikowy + klik na obszar
+    ============================================================ */
+    fileInput.addEventListener('change', e => {
+      handleFiles(e.target.files);
+      e.target.value = ''; // reset — umożliwia ponowny wybór tego samego pliku
+    });
+
+    dropArea.addEventListener('click', e => {
+      if (e.target.closest('.remove-btn'))  return; // nie otwieraj przy kliknięciu "usuń"
+      if (e.target.closest('.image-slot'))  return; // nie otwieraj przy kliknięciu na slot
+      fileInput.click();
+    });
+
+    /* ============================================================
+       Eksport Canvas (1000×1000 px)
+    ============================================================ */
+    function generateThumbnail() {
+      if (!images.length) {
+        showStatus('Dodaj co najmniej jedno zdjęcie!', 'error');
+        return;
+      }
+
+      dlBtn.disabled    = true;
+      dlBtn.textContent = '⏳ Generuję...';
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = 1000;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
+
+      // Białe tło (widoczne w GAP)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 1000, 1000);
+
+      const layout = getLayout(images.length);
+      const total  = Math.min(images.length, layout.length);
+      let done     = 0;
+      let failed   = false;
+
+      images.forEach((imgData, i) => {
+        if (i >= layout.length) return;
+        const s   = layout[i];
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        img.onload = () => {
+          if (failed) return;
+
+          // POPRAWKA: przycinanie do slotu — bez tego obrazy wylewały się na sąsiednie
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(s.x, s.y, s.w, s.h);
+          ctx.clip();
+
+          // "Cover" — wypełnij slot zachowując proporcje (identycznie jak object-fit: cover)
+          const ia = img.naturalWidth / img.naturalHeight;
+          const sa = s.w / s.h;
+          let dw, dh, dx, dy;
+
+          if (ia > sa) {
+            // Szerszy niż slot — dopasuj po wysokości, przytnij boki
+            dh = s.h;  dw = s.h * ia;
+            dx = s.x + (s.w - dw) / 2;  dy = s.y;
+          } else {
+            // Wyższy niż slot — dopasuj po szerokości, przytnij góra/dół
+            dw = s.w;  dh = s.w / ia;
+            dx = s.x;  dy = s.y + (s.h - dh) / 2;
+          }
+
+          ctx.drawImage(img, dx, dy, dw, dh);
+          ctx.restore();
+
+          if (++done === total) downloadCanvas(canvas);
+        };
+
+        img.onerror = () => {
+          if (failed) return;
+          failed = true;
+          showStatus(`Błąd ładowania: ${imgData.name}`, 'error');
+          dlBtn.disabled    = false;
+          dlBtn.textContent = '📥 Generuj miniaturę';
+        };
+
+        img.src = imgData.url;
+      });
+    }
+
+    function downloadCanvas(canvas) {
+      const date = new Date().toISOString().slice(0, 10);
+      const a    = document.createElement('a');
+      a.download = `thumbnail_${date}.png`;
+      a.href     = canvas.toDataURL('image/png');
+      a.click();
+
+      dlBtn.disabled    = false;
+      dlBtn.textContent = '📥 Generuj miniaturę';
+      showStatus('Miniatura wygenerowana! 🎉', 'success');
+    }
+
+    /* ============================================================
+       Wyczyść
+    ============================================================ */
+    function clearAll() {
+      if (!images.length) { showStatus('Brak zdjęć do usunięcia!', 'warning'); return; }
+      if (!confirm('Usunąć wszystkie zdjęcia?')) return;
+      images = [];
+      renderPreview();
+      showStatus('Wyczyszczono.', 'success');
+    }
+
+    /* ============================================================
+       Status helper — czyści poprzedni timer
+    ============================================================ */
+    let statusTimer;
+    function showStatus(msg, type) {
+      statusEl.textContent = msg;
+      statusEl.className   = `status-message ${type}`;
+      clearTimeout(statusTimer);
+      if (type !== 'error') {
+        statusTimer = setTimeout(() => { statusEl.className = 'status-message'; }, 4000);
+      }
+    }
+
+    /* ============================================================
+       Inicjalizacja
+    ============================================================ */
+    renderPreview();
+    applyScale();
   </script>
 </body>
 </html>
