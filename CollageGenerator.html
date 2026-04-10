@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,6 @@
       padding-top: 80px;
     }
 
-    /* ── Header ── */
     .header {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 70px;
@@ -24,19 +23,19 @@
       background: #fff;
       box-shadow: 0 2px 15px rgba(0,0,0,.15);
       z-index: 100;
+      display: flex;
+      align-items: center;
     }
     .header h1 { font-size: 1.8em; color: #333; }
     .header a   { text-decoration: none; color: inherit; transition: color .3s; }
     .header a:hover { color: #667eea; }
 
-    /* ── Page layout ── */
     .container {
       max-width: 1100px;
       margin: 30px auto;
       padding: 0 20px;
     }
 
-    /* ── Info card ── */
     .info-section {
       background: #fff;
       padding: 25px;
@@ -48,7 +47,19 @@
     .info-section h2 { color: #333; margin-bottom: 10px; font-size: 1.5em; }
     .info-section p  { color: #666; font-size: 1.05em; margin: 5px 0; }
 
-    /* ── Outer card ── */
+    /* ── Size badge — updated dynamically by renderPreview() ── */
+    .size-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 14px;
+      background: #f0f4ff;
+      color: #667eea;
+      border: 1px solid #d0d8ff;
+      border-radius: 20px;
+      font-size: 0.82em;
+      font-weight: 600;
+    }
+
     .outer-container {
       background: #fff;
       border-radius: 10px;
@@ -59,10 +70,6 @@
 
     .preview-wrapper { display: flex; justify-content: center; }
 
-    /*
-      drop-area — fizyczny rozmiar w px ustawiany przez applyScale()
-      overflow: hidden przycina layout-container po skalowaniu
-    */
     .drop-area {
       border: 3px dashed #667eea;
       border-radius: 10px;
@@ -72,6 +79,8 @@
       cursor: pointer;
       transition: border-color .3s, box-shadow .3s;
       flex-shrink: 0;
+      /* fallback min-height so area is visible even before applyScale runs */
+      min-height: 60px;
     }
     .drop-area:hover   { border-color: #764ba2; }
     .drop-area.highlight {
@@ -80,7 +89,6 @@
       box-shadow: 0 0 20px rgba(102,126,234,.35);
     }
 
-    /* ── Placeholder — pozycjonowany względem .drop-area ── */
     .drop-placeholder {
       position: absolute;
       top: 50%; left: 50%;
@@ -91,32 +99,28 @@
       width: 90%;
     }
     .drop-placeholder .ph-icon { font-size: 42px; display: block; margin-bottom: 10px; }
-    .drop-placeholder .ph-main {
-      font-size: 15px; font-weight: 600;
-      color: #999; margin-bottom: 6px;
-    }
-    .drop-placeholder .ph-sub { font-size: 12px; color: #bbb; }
+    .drop-placeholder .ph-main { font-size: 15px; font-weight: 600; color: #999; margin-bottom: 6px; }
+    .drop-placeholder .ph-sub  { font-size: 12px; color: #bbb; }
 
     /*
-      layout-container — zawsze 1000×500 px wewnętrznie,
-      skalowany przez CSS transform (transform-origin: top left).
-      overflow: hidden na .drop-area przycina go do wizualnego rozmiaru.
+      layout-container — always 1000 px wide, height set by applyScale().
+      CSS transform scales it to fit the screen.
     */
     .layout-container {
       width: 1000px;
-      height: 500px;
       position: relative;
-      background: #fff;
       transform-origin: top left;
+      background: #fff;
     }
 
     /* ── Image slot ── */
     .image-slot {
       position: absolute;
       overflow: hidden;
-      background: #e8e8e8;
+      /* white bg visible around contained images */
+      background: #ffffff;
       cursor: grab;
-      border: 2px solid transparent;
+      border: 2px solid #e0e0e0;
       user-select: none;
       transition: border-color .15s;
     }
@@ -128,65 +132,87 @@
     }
     .image-slot.drag-over {
       border: 3px solid #764ba2;
-      box-shadow: inset 0 0 20px rgba(102,126,234,.25);
+      box-shadow: inset 0 0 20px rgba(102,126,234,.2);
     }
 
     /*
-      WAŻNE: object-fit: cover — identyczny efekt jak logika "cover" w canvas.
-      Dzięki temu podgląd = wynik eksportu.
+      object-fit: contain — shows the full product image,
+      white space fills the rest (matches canvas export logic)
     */
     .image-slot img {
-      width: 100%; height: 100%;
-      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
     }
 
-    /* ── Numerek pozycji ── */
+    /* ── Position badge ── */
     .slot-badge {
-      position: absolute; top: 7px; left: 7px;
-      width: 22px; height: 22px;
+      position: absolute; top: 6px; left: 6px;
+      width: 20px; height: 20px;
       border-radius: 50%;
-      background: rgba(0,0,0,.5);
-      color: #fff; font-size: 11px; font-weight: 700;
+      background: rgba(0,0,0,.45);
+      color: #fff; font-size: 10px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       pointer-events: none; z-index: 6;
     }
 
-    /* ── Przycisk usuwania ── */
+    /* ── Remove button ─────────────────────────────────────────
+       Styled entirely standalone — no global "button {}" exists
+       so padding can never bleed in from action buttons.
+    ────────────────────────────────────────────────────────────── */
     .remove-btn {
-      position: absolute; top: 7px; right: 7px;
-      width: 28px; height: 28px;
-      border-radius: 50%; border: none;
-      background: rgba(220,50,50,.9);
-      color: #fff; font-size: 13px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; opacity: 0;
+      appearance: none;
+      -webkit-appearance: none;
+
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 26px; height: 26px;
+      padding: 0;
+      margin: 0;
+
+      border: none;
+      border-radius: 50%;
+      background: rgba(210,40,40,.88);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      cursor: pointer;
+      opacity: 0;
       transition: opacity .2s, transform .2s, background .2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,.3);
       z-index: 10;
     }
     .image-slot:hover .remove-btn { opacity: 1; }
-    .remove-btn:hover { transform: scale(1.15); background: #c00; }
+    .remove-btn:hover { transform: scale(1.15); background: #b00; }
 
-    /* ── Podpowiedź drag ── */
+    /* ── Drag hint ── */
     .drag-hint {
-      position: absolute; bottom: 6px; left: 6px;
-      background: rgba(0,0,0,.45);
+      position: absolute; bottom: 5px; left: 5px;
+      background: rgba(0,0,0,.4);
       color: #fff; font-size: 10px;
-      padding: 3px 7px; border-radius: 4px;
+      padding: 2px 7px; border-radius: 4px;
       opacity: 0; pointer-events: none;
       transition: opacity .2s; z-index: 5;
     }
     .image-slot:hover .drag-hint { opacity: 1; }
 
-    /* ── Stopka podglądu ── */
+    /* ── Preview footer ── */
     .preview-footer {
       text-align: center;
       margin-top: 12px;
     }
     .count-label { font-size: 13px; color: #777; margin-bottom: 8px; }
+
     .add-btn-label {
       display: inline-block;
       padding: 8px 22px;
@@ -196,29 +222,35 @@
       cursor: pointer;
       transition: transform .2s, box-shadow .2s;
       box-shadow: 0 2px 10px rgba(102,126,234,.35);
+      user-select: none;
     }
     .add-btn-label:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 15px rgba(102,126,234,.45);
     }
 
-    /* ── Przyciski akcji ── */
+    /* ── Action buttons — by ID only, never "button {}" ── */
     .button-container {
       display: flex; justify-content: center;
       gap: 20px; flex-wrap: wrap; margin-top: 20px;
     }
-    button {
-      padding: 14px 38px; font-size: 15px;
-      border: none; border-radius: 8px;
-      cursor: pointer; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .5px;
+
+    #downloadButton,
+    #clearButton {
+      padding: 14px 38px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
       box-shadow: 0 4px 15px rgba(0,0,0,.2);
       transition: transform .25s, box-shadow .25s;
+      color: #fff;
     }
-
     #downloadButton {
       background: linear-gradient(135deg, #a7c957 0%, #6a994e 100%);
-      color: #fff;
     }
     #downloadButton:hover:not(:disabled) {
       transform: translateY(-3px);
@@ -228,17 +260,14 @@
       background: #ccc; cursor: not-allowed;
       opacity: .6; transform: none;
     }
-
     #clearButton {
       background: linear-gradient(135deg, #ae2012 0%, #9b2226 100%);
-      color: #fff;
     }
     #clearButton:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 25px rgba(174,32,18,.4);
     }
 
-    /* ── Status ── */
     .status-message {
       padding: 11px 18px; margin-top: 14px;
       border-radius: 6px; font-weight: 500;
@@ -260,6 +289,7 @@
 </head>
 
 <body>
+
   <div class="header">
     <h1><a href="main.html">📸 Generators</a></h1>
   </div>
@@ -268,37 +298,32 @@
 
     <div class="info-section">
       <h2>🖼️ Collage Generator</h2>
-      <p>Przeciągnij i upuść zdjęcia, wklej ze schowka (Ctrl+V) lub kliknij obszar, aby wybrać pliki.</p>
+      <p>Drag and drop images, paste from clipboard (Ctrl+V), or click the area to select files.</p>
       <p style="font-size:.9em;color:#999;margin-top:8px;">
-        ✋ Przeciągnij obrazki by zmienić kolejność &nbsp;•&nbsp;
-        Obsługuje 1–8 obrazków &nbsp;•&nbsp;
-        Wynik: 1000 × 500 px
+        ✋ Drag images to reorder &nbsp;•&nbsp; max. 4 per row &nbsp;•&nbsp; 5–8 images = 2 rows
       </p>
+      <!-- FIX: element that JS updates — was missing entirely in previous version -->
+      <span class="size-badge" id="sizeLabel">Output: 1000 × 333 px</span>
     </div>
 
     <div class="outer-container">
       <div class="preview-wrapper">
         <div>
 
-          <!-- Obszar upuszczania — rozmiar fizyczny ustawiany przez applyScale() -->
           <div class="drop-area" id="dropArea">
-
-            <!-- Placeholder widoczny gdy brak zdjęć -->
             <div class="drop-placeholder" id="dropPlaceholder">
               <span class="ph-icon">🖼️</span>
-              <p class="ph-main">Upuść zdjęcia tutaj lub kliknij</p>
-              <p class="ph-sub">PNG, JPG, WEBP &nbsp;•&nbsp; maks. 8 obrazków</p>
+              <p class="ph-main">Drop images here or click</p>
+              <p class="ph-sub">PNG, JPG, WEBP &nbsp;•&nbsp; max. 8 images &nbsp;•&nbsp; max. 4 per row</p>
             </div>
-
-            <!-- Wewnętrzna przestrzeń 1000×500 (skalowana CSS transform) -->
             <div class="layout-container" id="layoutContainer"></div>
           </div>
 
           <div class="preview-footer">
             <p class="count-label">
-              <span id="imageCount">0</span> / 8 obrazków
+              <span id="imageCount">0</span> / 8 images
             </p>
-            <label class="add-btn-label" for="fileInput">➕ Dodaj zdjęcia</label>
+            <label class="add-btn-label" for="fileInput">➕ Add images</label>
             <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
           </div>
 
@@ -308,22 +333,25 @@
     </div>
 
     <div class="button-container">
-      <button id="downloadButton" onclick="generateCollage()">📥 Generuj kolaż</button>
-      <button id="clearButton"    onclick="clearAll()">🗑️ Wyczyść</button>
+      <button id="downloadButton" onclick="generateCollage()">📥 Generate Collage</button>
+      <button id="clearButton"    onclick="clearAll()">🗑️ Clear All</button>
     </div>
 
   </div>
 
   <script>
     /* ============================================================
-       Stałe i stan
+       Constants
+       ROW_H  = 333 px  → 1 row:  1000 × 333  (3:1)
+       2 rows = 333+4+333 = 670 px → 1000 × 670  (≈ 3:2)
     ============================================================ */
-    const MAX_IMAGES = 8;
-    const GAP       = 4;      // przerwa między kafelkami w przestrzeni 1000 px
-    const CANVAS_W  = 1000;
-    const CANVAS_H  = 500;
+    const MAX_IMAGES  = 8;
+    const MAX_PER_ROW = 4;
+    const GAP         = 4;
+    const CANVAS_W    = 1000;
+    const ROW_H       = 333;
 
-    let images     = [];      // [{ url: string, name: string }]
+    let images     = [];
     let draggedIdx = null;
 
     const dropArea        = document.getElementById('dropArea');
@@ -333,157 +361,175 @@
     const fileInput       = document.getElementById('fileInput');
     const countEl         = document.getElementById('imageCount');
     const dlBtn           = document.getElementById('downloadButton');
+    const sizeLabel       = document.getElementById('sizeLabel');
 
     /* ============================================================
-       Obliczanie layoutu — JEDNA funkcja dla podglądu i eksportu.
+       Canvas height — depends on image count
+    ============================================================ */
+    function getCanvasHeight(n) {
+      return n <= MAX_PER_ROW ? ROW_H : ROW_H * 2 + GAP; // 333 or 670
+    }
 
-       POPRAWKA ZAOKRĄGLENIA: ostatnia komórka = CANVAS_W - x,
-       dzięki czemu nie powstaje biały margines po prawej stronie.
+    /* ============================================================
+       Layout — single source of truth for preview & export
+
+       Distribution for 2 rows:
+         5 → 3 top + 2 bottom
+         6 → 3 top + 3 bottom
+         7 → 4 top + 3 bottom
+         8 → 4 top + 4 bottom
     ============================================================ */
     function getLayout(n) {
       if (n === 0) return [];
-      const totalGaps = GAP * (n - 1);
-      const cellW     = Math.floor((CANVAS_W - totalGaps) / n);
-      const layout    = [];
+      const layout = [];
 
-      for (let i = 0; i < n; i++) {
-        const x = i * (cellW + GAP);
-        const w = (i === n - 1) ? (CANVAS_W - x) : cellW;  // ostatnia komórka
-        layout.push({ x, y: 0, w, h: CANVAS_H });
+      if (n <= MAX_PER_ROW) {
+        buildRow(layout, n, 0);
+      } else {
+        const topCount = Math.ceil(n / 2);
+        const botCount = n - topCount;
+        buildRow(layout, topCount, 0);
+        buildRow(layout, botCount, ROW_H + GAP);
       }
       return layout;
     }
 
+    /* Builds one row of `count` equal-width cells at y = `yOffset` */
+    function buildRow(layout, count, yOffset) {
+      const totalGaps = GAP * (count - 1);
+      const cellW     = Math.floor((CANVAS_W - totalGaps) / count);
+      for (let i = 0; i < count; i++) {
+        const x = i * (cellW + GAP);
+        const w = (i === count - 1) ? (CANVAS_W - x) : cellW;
+        layout.push({ x, y: yOffset, w, h: ROW_H });
+      }
+    }
+
     /* ============================================================
-       Responsywne skalowanie podglądu.
-       dropArea         → fizyczny rozmiar widoczny na stronie
-       layoutContainer  → wewnętrzna przestrzeń 1000×500 (transform: scale)
+       Responsive scaling
     ============================================================ */
     function applyScale() {
-      const outer    = document.querySelector('.outer-container');
-      const outerPad = 60;                                   // 2 × 30 px padding
-      const available = Math.max(200, outer.clientWidth - outerPad);
+      const canvasH   = getCanvasHeight(images.length);
+      const outer     = document.querySelector('.outer-container');
+      const available = Math.max(200, outer.clientWidth - 60);
       const scale     = Math.min(1, available / CANVAS_W);
-      const visW      = Math.round(CANVAS_W * scale);
-      const visH      = Math.round(CANVAS_H * scale);
 
-      dropArea.style.width  = visW + 'px';
-      dropArea.style.height = visH + 'px';
+      const visW = Math.round(CANVAS_W * scale);
+      const visH = Math.round(canvasH  * scale);
+
+      dropArea.style.width       = visW + 'px';
+      dropArea.style.height      = visH + 'px';
+      layoutContainer.style.width  = CANVAS_W + 'px';
+      layoutContainer.style.height = canvasH  + 'px';
       layoutContainer.style.transform = `scale(${scale})`;
     }
 
     window.addEventListener('resize', applyScale);
 
     /* ============================================================
-       Renderowanie podglądu
+       Render preview
     ============================================================ */
     function renderPreview() {
-      countEl.textContent           = images.length;
-      dlBtn.disabled                = images.length === 0;
-      dropPlaceholder.style.display = images.length ? 'none' : 'block';
+      const n = images.length;
+
+      countEl.textContent           = n;
+      dlBtn.disabled                = n === 0;
+      dropPlaceholder.style.display = n ? 'none' : 'block';
+
+      /* FIX: sizeLabel now exists in HTML — no crash */
+      sizeLabel.textContent = n === 0  ? 'Output: 1000 × 333 px'
+                            : n <= 4   ? `Output: 1000 × 333 px (${n} image${n>1?'s':''})`
+                            :            `Output: 1000 × 670 px — 2 rows (${n} images)`;
 
       layoutContainer.innerHTML = '';
-      if (!images.length) return;
 
-      const layout = getLayout(images.length);
+      if (n) {
+        const layout = getLayout(n);
+        images.forEach((imgData, i) => buildSlot(imgData, i, layout[i]));
+      }
 
-      images.forEach((imgData, i) => {
-        const s    = layout[i];
-        const slot = document.createElement('div');
-        slot.className    = 'image-slot';
-        slot.draggable    = true;
-        slot.dataset.idx  = i;
-        slot.style.cssText =
-          `left:${s.x}px; top:${s.y}px; width:${s.w}px; height:${s.h}px;`;
+      applyScale(); /* height may change when crossing 4→5 images */
+    }
 
-        // Obrazek (object-fit: cover — identyczny efekt jak w canvas)
-        const img    = document.createElement('img');
-        img.src       = imgData.url;
-        img.alt       = imgData.name;
-        img.draggable = false;
+    /* ============================================================
+       Build one image slot for the preview
+    ============================================================ */
+    function buildSlot(imgData, i, s) {
+      const slot = document.createElement('div');
+      slot.className   = 'image-slot';
+      slot.draggable   = true;
+      slot.dataset.idx = i;
+      slot.style.cssText =
+        `left:${s.x}px; top:${s.y}px; width:${s.w}px; height:${s.h}px;`;
 
-        // Numerek pozycji
-        const badge       = document.createElement('div');
-        badge.className   = 'slot-badge';
-        badge.textContent = i + 1;
+      const img    = document.createElement('img');
+      img.src       = imgData.url;
+      img.alt       = imgData.name;
+      img.draggable = false;
 
-        // Przycisk usuwania
-        const rmBtn = document.createElement('button');
-        rmBtn.className   = 'remove-btn';
-        rmBtn.type        = 'button';
-        rmBtn.title       = 'Usuń zdjęcie';
-        rmBtn.textContent = '✕';
-        rmBtn.addEventListener('click', e => {
-          e.stopPropagation();
-          images.splice(i, 1);
+      const badge       = document.createElement('div');
+      badge.className   = 'slot-badge';
+      badge.textContent = i + 1;
+
+      const rmBtn       = document.createElement('button');
+      rmBtn.className   = 'remove-btn';
+      rmBtn.type        = 'button';
+      rmBtn.title       = 'Remove image';
+      rmBtn.textContent = '✕';
+      rmBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        images.splice(i, 1);
+        renderPreview();
+        showStatus('Image removed.', 'success');
+      });
+
+      const hint       = document.createElement('div');
+      hint.className   = 'drag-hint';
+      hint.textContent = '↔ Drag to reorder';
+
+      slot.append(img, badge, rmBtn, hint);
+      layoutContainer.appendChild(slot);
+
+      /* Drag & drop — reordering */
+      slot.addEventListener('dragstart', e => {
+        draggedIdx = i;
+        slot.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(i));
+      });
+      slot.addEventListener('dragover', e => {
+        if (isFileDrag(e)) return;
+        e.preventDefault(); e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+        if (!slot.classList.contains('dragging')) slot.classList.add('drag-over');
+      });
+      slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+      slot.addEventListener('drop', e => {
+        if (isFileDrag(e)) { e.preventDefault(); return; }
+        e.preventDefault(); e.stopPropagation();
+        slot.classList.remove('drag-over');
+        if (draggedIdx !== null && draggedIdx !== i) {
+          [images[draggedIdx], images[i]] = [images[i], images[draggedIdx]];
           renderPreview();
-          showStatus('Zdjęcie usunięte.', 'success');
-        });
-
-        // Podpowiedź drag
-        const hint       = document.createElement('div');
-        hint.className   = 'drag-hint';
-        hint.textContent = '↔ Przeciągnij by zmienić kolejność';
-
-        slot.append(img, badge, rmBtn, hint);
-        layoutContainer.appendChild(slot);
-
-        /* -- Drag & drop — zmiana kolejności -- */
-        slot.addEventListener('dragstart', e => {
-          draggedIdx = i;
-          slot.classList.add('dragging');
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', String(i));
-        });
-
-        slot.addEventListener('dragover', e => {
-          if (isFileDrag(e)) return;          // pliki z zewnątrz — przepuść do dropArea
-          e.preventDefault();
-          e.stopPropagation();
-          e.dataTransfer.dropEffect = 'move';
-          if (!slot.classList.contains('dragging')) slot.classList.add('drag-over');
-        });
-
-        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
-
-        slot.addEventListener('drop', e => {
-          if (isFileDrag(e)) {
-            // Pliki z zewnątrz: zapobiegnij otwarciu pliku w przeglądarce,
-            // ale pozwól zdarzeniu bąbelkować do dropArea
-            e.preventDefault();
-            return;
-          }
-          e.preventDefault();
-          e.stopPropagation();
-          slot.classList.remove('drag-over');
-
-          if (draggedIdx !== null && draggedIdx !== i) {
-            [images[draggedIdx], images[i]] = [images[i], images[draggedIdx]];
-            renderPreview();
-            showStatus('Kolejność zmieniona!', 'success');
-          }
-        });
-
-        slot.addEventListener('dragend', () => {
-          document.querySelectorAll('.image-slot')
-            .forEach(s => s.classList.remove('dragging', 'drag-over'));
-          draggedIdx = null;
-        });
+        }
+      });
+      slot.addEventListener('dragend', () => {
+        document.querySelectorAll('.image-slot')
+          .forEach(s => s.classList.remove('dragging', 'drag-over'));
+        draggedIdx = null;
       });
     }
 
     /* ============================================================
-       Obsługa plików
+       File handling
     ============================================================ */
     function handleFiles(fileList) {
       const arr = Array.from(fileList).filter(f => f.type.startsWith('image/'));
       if (!arr.length) return;
-
       let queued = 0;
       for (const file of arr) {
         if (images.length + queued >= MAX_IMAGES) {
-          showStatus(`Maks. ${MAX_IMAGES} obrazki!`, 'warning');
-          break;
+          showStatus(`Maximum ${MAX_IMAGES} images!`, 'warning'); break;
         }
         queued++;
         const reader = new FileReader();
@@ -493,47 +539,32 @@
             renderPreview();
           }
         };
-        reader.onerror = () => showStatus('Błąd wczytywania: ' + file.name, 'error');
+        reader.onerror = () => showStatus('Error reading: ' + file.name, 'error');
         reader.readAsDataURL(file);
       }
     }
 
-    /* ============================================================
-       Obsługa strefy upuszczania plików
-    ============================================================ */
     function isFileDrag(e) {
-      return e.dataTransfer && e.dataTransfer.types &&
+      return e.dataTransfer?.types &&
              Array.from(e.dataTransfer.types).includes('Files');
     }
 
     dropArea.addEventListener('dragenter', e => {
       if (isFileDrag(e)) dropArea.classList.add('highlight');
     });
-
     dropArea.addEventListener('dragover', e => {
-      if (isFileDrag(e)) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-      }
+      if (isFileDrag(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
     });
-
-    // POPRAWKA: relatedTarget zamiast e.target === dropArea
     dropArea.addEventListener('dragleave', e => {
-      if (!dropArea.contains(e.relatedTarget)) {
-        dropArea.classList.remove('highlight');
-      }
+      if (!dropArea.contains(e.relatedTarget)) dropArea.classList.remove('highlight');
     });
-
     dropArea.addEventListener('drop', e => {
-      if (!isFileDrag(e)) return;     // reorder-dropy zatrzymane przez stopPropagation na slocie
+      if (!isFileDrag(e)) return;
       e.preventDefault();
       dropArea.classList.remove('highlight');
       handleFiles(e.dataTransfer.files);
     });
 
-    /* ============================================================
-       Wklejanie ze schowka
-    ============================================================ */
     document.addEventListener('paste', e => {
       const files = Array.from(e.clipboardData.items)
         .filter(it => it.kind === 'file' && it.type.startsWith('image/'))
@@ -541,45 +572,40 @@
       if (files.length) handleFiles(files);
     });
 
-    /* ============================================================
-       Input plikowy + klik na pusty obszar
-    ============================================================ */
     fileInput.addEventListener('change', e => {
       handleFiles(e.target.files);
-      e.target.value = '';            // reset — umożliwia ponowny wybór tego samego pliku
+      e.target.value = '';
     });
-
     dropArea.addEventListener('click', e => {
-      if (e.target.closest('.remove-btn'))  return;
-      if (e.target.closest('.image-slot'))  return;
+      if (e.target.closest('.remove-btn')) return;
+      if (e.target.closest('.image-slot')) return;
       fileInput.click();
     });
 
     /* ============================================================
-       Eksport Canvas — 1000 × 500 px
+       Canvas export
+       Uses "contain" logic — whole image visible, white fill on sides.
+       Matches object-fit: contain in the preview.
     ============================================================ */
     function generateCollage() {
-      if (!images.length) {
-        showStatus('Dodaj co najmniej jedno zdjęcie!', 'error');
-        return;
-      }
+      if (!images.length) { showStatus('Please add at least one image!', 'error'); return; }
 
       dlBtn.disabled    = true;
-      dlBtn.textContent = '⏳ Generuję...';
+      dlBtn.textContent = '⏳ Generating...';
 
-      const canvas = document.createElement('canvas');
+      const canvasH = getCanvasHeight(images.length);
+      const canvas  = document.createElement('canvas');
       canvas.width  = CANVAS_W;
-      canvas.height = CANVAS_H;
-      const ctx = canvas.getContext('2d');
+      canvas.height = canvasH;
+      const ctx     = canvas.getContext('2d');
 
-      // Białe tło (widoczne w przerwach GAP)
+      /* White background — visible as padding around contained images */
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.fillRect(0, 0, CANVAS_W, canvasH);
 
       const layout = getLayout(images.length);
       const total  = images.length;
-      let done     = 0;
-      let failed   = false;
+      let done = 0, failed = false;
 
       images.forEach((imgData, i) => {
         const s   = layout[i];
@@ -589,85 +615,85 @@
         img.onload = () => {
           if (failed) return;
 
-          // POPRAWKA: przycinanie do slotu zapobiega wylewaniu się
-          // obrazu na sąsiednie komórki
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(s.x, s.y, s.w, s.h);
-          ctx.clip();
+          /* White cell background (in case image has transparency) */
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(s.x, s.y, s.w, s.h);
 
-          // Tryb "cover" — wypełnij slot zachowując proporcje (identycznie jak object-fit: cover)
+          /*
+            "Contain" — scale image to fit entirely within slot,
+            center it, leave white space on shorter axis.
+            This matches object-fit: contain in CSS.
+          */
           const ia = img.naturalWidth / img.naturalHeight;
           const sa = s.w / s.h;
           let dw, dh, dx, dy;
 
           if (ia > sa) {
-            // Obraz szerszy niż slot: dopasuj po wysokości, przytnij boki
-            dh = s.h;  dw = s.h * ia;
-            dx = s.x + (s.w - dw) / 2;  dy = s.y;
+            /* Image wider than slot → fit by width, pad top & bottom */
+            dw = s.w;
+            dh = s.w / ia;
+            dx = s.x;
+            dy = s.y + (s.h - dh) / 2;
           } else {
-            // Obraz węższy niż slot: dopasuj po szerokości, przytnij góra/dół
-            dw = s.w;  dh = s.w / ia;
-            dx = s.x;  dy = s.y + (s.h - dh) / 2;
+            /* Image taller than slot → fit by height, pad left & right */
+            dh = s.h;
+            dw = s.h * ia;
+            dx = s.x + (s.w - dw) / 2;
+            dy = s.y;
           }
 
           ctx.drawImage(img, dx, dy, dw, dh);
-          ctx.restore();
 
-          if (++done === total) downloadCanvas(canvas);
+          if (++done === total) downloadCanvas(canvas, canvasH);
         };
 
         img.onerror = () => {
           if (failed) return;
           failed = true;
-          showStatus(`Błąd ładowania: ${imgData.name}`, 'error');
+          showStatus(`Error loading: ${imgData.name}`, 'error');
           dlBtn.disabled    = false;
-          dlBtn.textContent = '📥 Generuj kolaż';
+          dlBtn.textContent = '📥 Generate Collage';
         };
 
         img.src = imgData.url;
       });
     }
 
-    function downloadCanvas(canvas) {
+    function downloadCanvas(canvas, canvasH) {
       const date = new Date().toISOString().slice(0, 10);
       const a    = document.createElement('a');
-      a.download = `collage_${date}.png`;
+      a.download = `collage_1000x${canvasH}_${date}.png`;
       a.href     = canvas.toDataURL('image/png');
       a.click();
-
       dlBtn.disabled    = false;
-      dlBtn.textContent = '📥 Generuj kolaż';
-      showStatus('Kolaż wygenerowany! 🎉', 'success');
+      dlBtn.textContent = '📥 Generate Collage';
+      showStatus('Collage generated! 🎉', 'success');
     }
 
     /* ============================================================
-       Wyczyść
+       Clear all
     ============================================================ */
     function clearAll() {
-      if (!images.length) { showStatus('Brak zdjęć do usunięcia!', 'warning'); return; }
-      if (!confirm('Usunąć wszystkie zdjęcia?')) return;
+      if (!images.length) { showStatus('Nothing to clear!', 'warning'); return; }
+      if (!confirm('Remove all images?')) return;
       images = [];
       renderPreview();
-      showStatus('Wyczyszczono.', 'success');
+      showStatus('All cleared.', 'success');
     }
 
     /* ============================================================
-       Status helper — czyści poprzedni timer przed ustawieniem nowego
+       Status helper
     ============================================================ */
     let statusTimer;
     function showStatus(msg, type) {
       statusEl.textContent = msg;
       statusEl.className   = `status-message ${type}`;
       clearTimeout(statusTimer);
-      if (type !== 'error') {
+      if (type !== 'error')
         statusTimer = setTimeout(() => { statusEl.className = 'status-message'; }, 4000);
-      }
     }
 
-    /* ============================================================
-       Inicjalizacja
-    ============================================================ */
+    /* ── Init ── */
     renderPreview();
     applyScale();
   </script>
