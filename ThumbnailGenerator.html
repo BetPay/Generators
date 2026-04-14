@@ -130,7 +130,8 @@
     /* object-fit: cover — matches canvas export behaviour */
     .image-slot img {
       width: 100%; height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      background: #ffffff;
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
@@ -574,11 +575,11 @@
           let dw, dh, dx, dy;
 
           if (ia > sa) {
-            dh = s.h;  dw = s.h * ia;
-            dx = s.x + (s.w - dw) / 2;  dy = s.y;
-          } else {
             dw = s.w;  dh = s.w / ia;
             dx = s.x;  dy = s.y + (s.h - dh) / 2;
+          } else {
+            dh = s.h;  dw = s.h * ia;
+            dx = s.x + (s.w - dw) / 2;  dy = s.y;
           }
 
           ctx.drawImage(img, dx, dy, dw, dh);
