@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -129,13 +129,13 @@
 
     /* object-fit: cover — matches canvas export behaviour */
     .image-slot img {
-      width: 100%; height: 100%;
-      object-fit: contain;
-      background: #ffffff;
-      pointer-events: none;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #ffffff;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
 
     /* ── Remove button ─────────────────────────────────────────
        FIX: padding: 0 prevents the generic "button { padding: 14px 38px }"
@@ -577,10 +577,10 @@
           if (ia > sa) {
             dw = s.w;  dh = s.w / ia;
             dx = s.x;  dy = s.y + (s.h - dh) / 2;
-          } else {
+        } else {
             dh = s.h;  dw = s.h * ia;
             dx = s.x + (s.w - dw) / 2;  dy = s.y;
-          }
+}
 
           ctx.drawImage(img, dx, dy, dw, dh);
           ctx.restore();
