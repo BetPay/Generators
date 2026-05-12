@@ -1,198 +1,513 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ali Generator</title>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <style>
-        body {
-            font-family: Verdana; 
-            background: #f8f8f8; 
-            color: #333; 
-        }
-
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            padding: 20px;  
-            background: #fff; 
-            text-align: left; 
-            box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.1); 
-        }
-
-        .header h1 {
-            font-size: 2em; 
-            color: #333; 
-        }
-
-        .header a {
-            text-decoration: none; 
-            color: inherit; 
-        }
-
-        .dropzone {
-            text-align: center;
-            margin-top: 130px;
-        }
-
-        .output {
-            padding: 20px;
-            margin-top: 30px; /* Dodanie marginesu górnego */
-        }
-		
-		#clearButton {
-		display: block;
-            width: 200px;
-            height: 50px;
-            background-color: #ae2012; 
-            color: white; 
-            border: none; 
-            margin: 10px;
-            border-radius: 5px;
-            font-size: 18px;
-            line-height: 50px;
-            transition: all 0.3s linear; 
-            cursor: pointer; 
-            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AliExpress Affiliate Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    #clearButton:hover {
-      background-color: #9b2226; 
-      box-shadow: 0px 0px 15px 0px rgba(0,0,0,.2);
-      transform: scale(1.05); 
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #e8392a;
+      --accent2: #ff6b35;
+      --text: #f0f0f0;
+      --text-muted: #8b90a8;
+      --success: #4ade80;
+      --warning: #f59e0b;
+      --radius: 14px;
     }
 
-        #generateButton {
-            display: block;
-            width: 200px;
-            height: 50px;
-            background-color: #a7c957; 
-            color: white; 
-            border: none; 
-            margin: 10px;
-            border-radius: 5px;
-            font-size: 18px;
-            line-height: 50px;
-            transition: all 0.3s linear; 
-            cursor: pointer; 
-            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
-        }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
 
-        #generateButton:hover {
-            background-color: #6a994e; 
-            box-shadow: 0px 0px 15px 0px rgba(0,0,0,.2);
-            transform: scale(1.05); 
-        }
+    .container {
+      width: 100%;
+      max-width: 640px;
+    }
 
-        .button-container {
-            display: flex;
-            padding-top: 50px;
-            justify-content: center;
-            gap: 10px; 
-        }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
 
-        .result-link {
-            color: black;
-            font-size: 18px; 
-            font-weight: bold; 
-            text-decoration: none;
-            display: block; 
-            margin-top: 30px; 
-        }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
 
-        .result-link:hover {
-            color: #9b2226; 
-			transform: scale(1.05); 
-        }
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
 
-        .check-text {
-            margin-top: 40px; 
-            color: #333; 
-            font-size: 15px; 
-        }
-    </style>
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .country-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 8px;
+    }
+
+    .country-btn {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.5px;
+    }
+
+    .country-btn:hover {
+      border-color: var(--accent);
+      background: rgba(232, 57, 42, 0.08);
+    }
+
+    .country-btn.active {
+      border-color: var(--accent);
+      background: rgba(232, 57, 42, 0.15);
+      color: #ff7a6a;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 14px 40px 14px 16px;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--text-muted);
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="text"].invalid {
+      border-color: var(--warning);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.15s;
+      display: none;
+    }
+
+    .clear-btn:hover {
+      color: var(--text);
+    }
+
+    /* WARNING BOX */
+    .warning-box {
+      display: none;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1.5px solid rgba(245, 158, 11, 0.35);
+      border-radius: 10px;
+      padding: 14px 16px;
+      gap: 12px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .warning-box.visible {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .warning-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .warning-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .warning-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--warning);
+    }
+
+    .warning-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .warning-desc code {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fcd34d;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .result-area {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .result-area.visible {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-box {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      word-break: break-all;
+      line-height: 1.6;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .result-box:hover {
+      border-color: var(--success);
+      background: rgba(74, 222, 128, 0.04);
+    }
+
+    .copy-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 14px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .copy-btn:hover {
+      opacity: 0.9;
+    }
+
+    .copy-btn:active {
+      transform: scale(0.98);
+    }
+
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #22c55e, #4ade80);
+    }
+
+    .hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: -4px;
+    }
+
+    .no-country {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 12px;
+      background: rgba(255, 200, 0, 0.06);
+      border: 1px solid rgba(255, 200, 0, 0.15);
+      border-radius: 10px;
+      display: none;
+    }
+
+    .no-country.visible {
+      display: block;
+    }
+  </style>
 </head>
-
 <body>
+
+<div class="container">
   <div class="header">
-    <h1>Ali Generator</h1>
-  </div>
-  
-  <div class="dropzone">
-    <h4>Please paste link to Aliexpress product:</h4>
-    <div class="button-container">
-      <input type="text" id="userLink" placeholder="https://www.aliexpress.com/..." style="width: 30%;">
-      <button type="button" id="generateButton" onclick="generateLinks()">Generate Links</button>
-	  <button type="button" id="clearButton" onclick="clearField()">Clear</button>
+    <div class="logo">
+      <div class="logo-icon">🔗</div>
+      <h1>AliExpress Affiliate</h1>
     </div>
-    <div id="output" class="output"></div> 
+    <p class="subtitle">Paste a link → get your affiliate link instantly</p>
   </div>
-</body>
+
+  <div class="card">
+
+    <!-- COUNTRY -->
+    <div class="field">
+      <label>Select country</label>
+      <div class="country-grid" id="countryGrid"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- INPUT -->
+    <div class="field">
+      <label>AliExpress product link</label>
+      <div class="input-wrap">
+        <input
+          type="text"
+          id="linkInput"
+          placeholder="Paste your s.click.aliexpress.com link here..."
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+        <button class="clear-btn" id="clearBtn" title="Clear">×</button>
+      </div>
+    </div>
+
+    <!-- INVALID LINK WARNING -->
+    <div class="warning-box" id="warningBox">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-content">
+        <div class="warning-title">This doesn't look like an affiliate link</div>
+        <div class="warning-desc">
+          You pasted a regular AliExpress product URL. Please use a short affiliate link containing <code>s.click.aliexpress.com</code> 
+        </div>
+      </div>
+    </div>
+
+    <!-- NO COUNTRY WARNING -->
+    <div class="no-country" id="noCountry">
+      ⚠️ Please select a country above to generate the link
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-area" id="resultArea">
+      <label>Affiliate link</label>
+      <div class="result-box" id="resultBox" title="Click to copy"></div>
+      <button class="copy-btn" id="copyBtn">
+        <span id="copyIcon">📋</span>
+        <span id="copyText">Copy link</span>
+      </button>
+    </div>
+
+  </div>
+</div>
 
 <script>
-    function cleanLink(link) {
-        const url = new URL(link);
-        return url.origin + url.pathname;
+  const KEYS = {
+    UK: "_c3aXCd19",
+    DE: "_c3j2PyJd",
+    FR: "_c38lKz7h",
+    PL: "_c37tXmOx",
+    NL: "_c3xGl7DN",
+    AT: "_c4m5WcDp",
+    MX: "_c38Wk6RV",
+  };
+
+  let selectedCountry = localStorage.getItem("ali_country") || null;
+
+  // Build country buttons
+  const grid = document.getElementById("countryGrid");
+  Object.keys(KEYS).forEach(code => {
+    const btn = document.createElement("button");
+    btn.className = "country-btn" + (selectedCountry === code ? " active" : "");
+    btn.dataset.code = code;
+    btn.textContent = code;
+    btn.addEventListener("click", () => selectCountry(code));
+    grid.appendChild(btn);
+  });
+
+  function selectCountry(code) {
+    selectedCountry = code;
+    localStorage.setItem("ali_country", code);
+    document.querySelectorAll(".country-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.code === code);
+    });
+    generate();
+  }
+
+  const linkInput  = document.getElementById("linkInput");
+  const clearBtn   = document.getElementById("clearBtn");
+  const resultArea = document.getElementById("resultArea");
+  const resultBox  = document.getElementById("resultBox");
+  const noCountry  = document.getElementById("noCountry");
+  const warningBox = document.getElementById("warningBox");
+  const copyBtn    = document.getElementById("copyBtn");
+  const copyText   = document.getElementById("copyText");
+  const copyIcon   = document.getElementById("copyIcon");
+
+  function isValidAffiliateLink(url) {
+    return url.includes("s.click.aliexpress.com");
+  }
+
+  function generate() {
+    const url = linkInput.value.trim();
+    clearBtn.style.display = url ? "block" : "none";
+
+    // Reset states
+    warningBox.classList.remove("visible");
+    noCountry.classList.remove("visible");
+    resultArea.classList.remove("visible");
+    linkInput.classList.remove("invalid");
+
+    if (!url) return;
+
+    // Validate affiliate link format
+    if (!isValidAffiliateLink(url)) {
+      linkInput.classList.add("invalid");
+      warningBox.classList.add("visible");
+      return;
     }
 
-    function generateLinks() {
-        const userLink = document.getElementById('userLink').value;
-        const outputDiv = document.getElementById('output');
-        outputDiv.innerHTML = '';
-
-        // Sprawdzenie, czy pole jest puste
-        if (userLink.trim() === '') {
-            outputDiv.innerHTML = 'Please paste Aliexpress link.';
-            return;
-        }
-
-        // Sprawdzenie, czy to jest prawidłowy link
-        try {
-            new URL(userLink);
-        } catch (e) {
-            outputDiv.innerHTML = 'Please paste Aliexpress link.';
-            return;
-        }
-
-        const cleanUserLink = cleanLink(userLink);
-
-        // Sprawdzenie, czy link jest od AliExpress
-        if (!cleanUserLink.includes('aliexpress.com')) {
-            outputDiv.innerHTML = 'Please paste Aliexpress link.';
-            return;
-        }
-
-        const cleanLinkElement = document.createElement('a');
-        cleanLinkElement.href = cleanUserLink;
-        cleanLinkElement.target = '_blank'; 
-        cleanLinkElement.textContent = "Clean link";
-        cleanLinkElement.className = 'result-link'; 
-        outputDiv.appendChild(cleanLinkElement);
-
-        const params = ['561', '562', '680', '620'];
-        params.forEach((param, index) => {
-            const newLink = `${cleanUserLink}?sourceType=${param}`;
-            const linkElement = document.createElement('a');
-            linkElement.href = newLink;
-            linkElement.target = '_blank'; 
-            linkElement.textContent = `Option ${param}`;
-            linkElement.className = 'result-link'; 
-            outputDiv.appendChild(linkElement);
-        });
-
-        const checkText = document.createElement('p');
-        checkText.textContent = "Check the links to see if any lead to a lower price.";
-        checkText.className = 'check-text'; 
-        outputDiv.appendChild(checkText);
+    // Check country selected
+    if (!selectedCountry) {
+      noCountry.classList.add("visible");
+      return;
     }
 
-    function clearField() {
-        document.getElementById('userLink').value = '';
-        document.getElementById('output').innerHTML = '';
-    }
+    // Generate
+    const key = KEYS[selectedCountry];
+    const encoded = encodeURIComponent(url);
+    const result = `https://s.click.aliexpress.com/deep_link.htm?aff_short_key=${key}&dp={click_key}&dl_target_url=${encoded}`;
+
+    resultBox.textContent = result;
+    resultArea.classList.add("visible");
+
+    copyText.textContent = "Copy link";
+    copyIcon.textContent = "📋";
+    copyBtn.classList.remove("copied");
+  }
+
+  linkInput.addEventListener("input", generate);
+  linkInput.addEventListener("paste", () => setTimeout(generate, 10));
+
+  clearBtn.addEventListener("click", () => {
+    linkInput.value = "";
+    linkInput.classList.remove("invalid");
+    clearBtn.style.display = "none";
+    resultArea.classList.remove("visible");
+    noCountry.classList.remove("visible");
+    warningBox.classList.remove("visible");
+    linkInput.focus();
+  });
+
+  function copyToClipboard() {
+    const text = resultBox.textContent;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyText.textContent = "Copied!";
+      copyIcon.textContent = "✅";
+      copyBtn.classList.add("copied");
+      setTimeout(() => {
+        copyText.textContent = "Copy link";
+        copyIcon.textContent = "📋";
+        copyBtn.classList.remove("copied");
+      }, 2000);
+    });
+  }
+
+  copyBtn.addEventListener("click", copyToClipboard);
+  resultBox.addEventListener("click", copyToClipboard);
+
+  generate();
 </script>
+
+</body>
 </html>
